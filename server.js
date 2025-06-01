@@ -394,6 +394,7 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
         const pool = await sql.connect(req.session.dbConfig);
 
         if (field === 'position_name') {
+            // Update position id by name
             const posResult = await pool.request()
                 .input('position_name', sql.VarChar, value)
                 .query(`SELECT pos_id FROM s_positions WHERE position_name = @position_name`);
@@ -409,20 +410,29 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
                 .input('pos_id', sql.Int, pos_id)
                 .query(`UPDATE selection_card SET pos_id = @pos_id WHERE u_id = @id`);
 
-        } else if (field === 'job_offer') {
-            const newOffer = value.toLowerCase() === 'true';
-
-            const current = await pool.request()
+        } else if (field === 'selection_status') {
+            // When selection_status changes, check old value and update places_left accordingly
+            const oldStatusResult = await pool.request()
                 .input('id', sql.Int, userId)
-                .query(`
-                    SELECT job_offer, pos_id
-                    FROM selection_card
-                    WHERE u_id = @id
-                `);
+                .query(`SELECT selection_status, pos_id FROM selection_card WHERE u_id = @id`);
 
-            const { job_offer, pos_id } = current.recordset[0];
+            if (oldStatusResult.recordset.length === 0) {
+                return res.status(404).send('Record not found');
+            }
 
-            if (newOffer && !job_offer) {
+            const oldStatus = oldStatusResult.recordset[0].selection_status;
+            const pos_id = oldStatusResult.recordset[0].pos_id;
+
+            const newStatus = value;
+
+            // Update selection_status field first
+            await pool.request()
+                .input('value', sql.VarChar, newStatus)
+                .input('id', sql.Int, userId)
+                .query(`UPDATE selection_card SET selection_status = @value WHERE u_id = @id`);
+
+            // If changing to Accepted, decrement places_left if places are available
+            if (oldStatus !== 'Accepted' && newStatus === 'Accepted') {
                 const posCheck = await pool.request()
                     .input('pos_id', sql.Int, pos_id)
                     .query(`SELECT places_left FROM s_positions WHERE pos_id = @pos_id`);
@@ -430,6 +440,12 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
                 const placesLeft = posCheck.recordset[0]?.places_left ?? 0;
 
                 if (placesLeft <= 0) {
+                    // Revert the update because no places left
+                    await pool.request()
+                        .input('value', sql.VarChar, oldStatus)
+                        .input('id', sql.Int, userId)
+                        .query(`UPDATE selection_card SET selection_status = @value WHERE u_id = @id`);
+
                     return res.status(400).send('No available places for this position.');
                 }
 
@@ -437,18 +453,15 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
                     .input('pos_id', sql.Int, pos_id)
                     .query(`UPDATE s_positions SET places_left = places_left - 1 WHERE pos_id = @pos_id`);
 
-            } else if (!newOffer && job_offer) {
+            // If changing from Accepted to something else, increment places_left
+            } else if (oldStatus === 'Accepted' && newStatus !== 'Accepted') {
                 await pool.request()
                     .input('pos_id', sql.Int, pos_id)
                     .query(`UPDATE s_positions SET places_left = places_left + 1 WHERE pos_id = @pos_id`);
             }
 
-            await pool.request()
-                .input('id', sql.Int, userId)
-                .input('value', sql.Bit, newOffer ? 1 : 0)
-                .query(`UPDATE selection_card SET job_offer = @value WHERE u_id = @id`);
-
         } else {
+            // Update any other field
             await pool.request()
                 .input('value', sql.VarChar, value)
                 .input('id', sql.Int, userId)

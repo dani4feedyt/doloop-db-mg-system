@@ -17,7 +17,7 @@ export function attachCellEditors(csrfToken) {
 
     const isValidEmail = val => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
     const isValidURL = val => /^https?:\/\/.+/.test(val);
-
+    
     table.querySelectorAll('td[data-field]').forEach(cell => {
         const field = cell.dataset.field;
         const type = cell.dataset.type || 'text';
