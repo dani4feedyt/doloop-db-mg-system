@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/css/style.css">
+    <meta name="csrf-token" content="<%= csrfToken %>">
+    <script type="module" src="/js/job/job.js" defer></script>
+    <title>Job Applications</title>
+</head>
+<body>
+    <nav>
+        <h1>
+            Job Application Card
+            <span class="navigation-buttons">
+                <button id="prev-btn">←</button>
+                <button id="next-btn">→</button>
+                <button id="home">⌂</button>
+            </span>
+        </h1>
+    </nav>
+    <table border="1" cellpadding="10" cellspacing="0" class="editable-table", id="jobTable">
+        <tr><th>Name</th><td contenteditable="true" data-field="name" data-type="text"><%= person.name %></td></tr>
+        <tr><th>Surname</th><td contenteditable="true" data-field="surname" data-type="text"><%= person.surname %></td></tr>
+        <tr><th>Age</th><td contenteditable="true" data-field="age" data-type="number"><%= person.age %></td></tr>
+        <tr><th>Location</th><td contenteditable="true" data-field="location" data-type="text"><%= person.location %></td></tr>
+        
+        <tr><th>Position</th><td contenteditable="true" data-field="position_name" data-type="text"><%= jobs[0].pos_id %></td></tr>
+        <tr><th>Selection Status</th><td contenteditable="true" data-field="selection_status" data-type="text"><%= jobs[0].selection_status %></td></tr>
+        <tr><th>Interview Date</th><td data-field="interview_date" data-type="date"><%= jobs[0].interview_date?.toISOString().split('T')[0] || '' %></td></tr>
+        <tr><th>Interview Handler</th><td contenteditable="true" data-field="interview_handler" data-type="text"><%= jobs[0].interview_handler %></td></tr>
+        <tr><th>Source</th><td contenteditable="true" data-field="source" data-type="text"><%= jobs[0].source %></td></tr>
+        <tr><th>Job Offer</th><td data-field="job_offer" data-type="boolean"><%= jobs[0].job_offer ? 'True' : 'False' %></td></tr>
+        <tr><th>Candidate Decision</th><td contenteditable="true" data-field="candidate_decision" data-type="text"><%= jobs[0].candidate_decision %></td></tr>
+        <tr><th>Refusal Reason</th><td contenteditable="true" data-field="refusal_reason" data-type="text"><%= jobs[0].refusal_reason %></td></tr>
+        <tr><th>Work Start Date</th><td data-field="work_start_date" data-type="date"><%= jobs[0].work_start_date?.toISOString().split('T')[0] || '' %></td></tr>
+    </table>
+</body>
+</html>

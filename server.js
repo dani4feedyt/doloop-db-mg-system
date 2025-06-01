@@ -157,7 +157,6 @@ app.listen(PORT, () => {
 });
 
 
-// Biography page
 app.get('/bio/:id', requireDbLogin, async (req, res) => {
     const userId = parseInt(req.params.id, 10);
 
@@ -174,14 +173,12 @@ app.get('/bio/:id', requireDbLogin, async (req, res) => {
 
         const candidate = candidateResult.recordset[0];
 
-        // Fetch only job names from c_exp_list (remove fetching experience_summary from c_experience)
         const experienceListResult = await sql.query(`
             SELECT job_name FROM c_exp_list WHERE u_id = ${userId}
         `);
 
         const experienceList = experienceListResult.recordset;
 
-        // Fetch licenses as before
         const licensesResult = await sql.query(`SELECT license_name FROM c_licenses WHERE u_id = ${userId}`);
 
         res.render('bio', {
@@ -228,6 +225,8 @@ app.post('/bio/:id/update-field', requireDbLogin, async (req, res) => {
         res.status(500).send('Database update error');
     }
 });
+
+
 
 app.post('/bio/:id/update-licenses', requireDbLogin, async (req, res) => {
     const userId = parseInt(req.params.id, 10);
@@ -294,6 +293,93 @@ app.post('/bio/:id/update-experience-jobs', requireDbLogin, async (req, res) => 
     }
 });
 
+
+app.get('/job/:id', requireDbLogin, async (req, res) => {
+    const userId = parseInt(req.params.id, 10);
+
+    try {
+        await sql.connect(req.session.dbConfig);
+
+        const result = await sql.query(`
+            SELECT 
+                p.position_name, s.selection_status, s.interview_date,
+                s.interview_handler, s.source, s.job_offer,
+                s.candidate_decision, s.refusal_reason, s.work_start_date,
+
+                c.name, c.surname, c.age, c.location
+
+            FROM selection_card s
+            JOIN s_positions p ON s.pos_id = p.pos_id
+            JOIN candidate_card c ON c.u_id = s.u_id
+            WHERE s.u_id = ${userId}
+        `);
+
+        if (result.recordset.length === 0) {
+            return res.status(404).send('No job selection data found for this user.');
+        }
+
+        const personInfo = {
+            name: result.recordset[0].name,
+            surname: result.recordset[0].surname,
+            age: result.recordset[0].age,
+            location: result.recordset[0].location
+        };
+
+        const jobs = result.recordset.map(({ name, surname, age, location, ...jobData }) => jobData);
+
+        res.render('job', {
+            person: personInfo,
+            jobs,
+            csrfToken: req.csrfToken()
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Database error');
+    }
+});
+
+app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
+    const { field, value } = req.body;
+    const userId = parseInt(req.params.id, 10);
+
+    const allowedFields = {
+        'candidate_card': [
+            'name', 'surname', 'age', 'location'
+        ],
+        'selection_card': [
+            'selection_status', 'interview_date', 'interview_handler',
+            'source', 'job_offer', 'candidate_decision',
+            'refusal_reason', 'work_start_date'
+        ]
+    };
+
+    let tableToUpdate = null;
+    for (const [table, fields] of Object.entries(allowedFields)) {
+        if (fields.includes(field)) {
+            tableToUpdate = table;
+            break;
+        }
+    }
+
+    if (!tableToUpdate) {
+        return res.status(400).send('Invalid field');
+    }
+
+    try {
+        const pool = await sql.connect(req.session.dbConfig);
+        await pool.request()
+            .input('value', sql.VarChar, value)
+            .input('id', sql.Int, userId)
+            .query(`UPDATE ${tableToUpdate} SET [${field}] = @value WHERE u_id = @id`);
+
+        res.sendStatus(200);
+    } catch (err) {
+        console.error('DB error:', err);
+        res.status(500).send('Database update error');
+    }
+});
+
 app.get('/candidates', requireDbLogin, async (req, res) => {
     try {
         const search = req.query.search || '';
@@ -323,31 +409,3 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
     }
 });
 
-// Applications page
-app.get('/applications/:id', requireDbLogin, async (req, res) => {
-    const userId = req.params.id;
-
-    try {
-        await sql.connect(req.session.dbConfig);
-        const applications = await sql.query(`
-            SELECT 
-                p.position_name,
-                s.selection_status,
-                s.interview_date,
-                s.interview_handler,
-                s.source,
-                s.job_offer,
-                s.candidate_decision,
-                s.refusal_reason,
-                s.work_start_date
-            FROM selection_card s
-            JOIN s_positions p ON s.pos_id = p.pos_id
-            WHERE s.u_id = ${userId}
-        `);
-
-        res.render('applications', { data: applications.recordset });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Database error');
-    }
-});
