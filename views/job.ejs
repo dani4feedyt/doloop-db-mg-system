@@ -14,6 +14,7 @@
                 <button id="prev-btn">←</button>
                 <button id="next-btn">→</button>
                 <button id="home">⌂</button>
+                <button id="toggle-view-btn"></button>
             </span>
         </h1>
     </nav>
@@ -23,13 +24,20 @@
         <tr><th>Age</th><td contenteditable="true" data-field="age" data-type="number"><%= person.age %></td></tr>
         <tr><th>Location</th><td contenteditable="true" data-field="location" data-type="text"><%= person.location %></td></tr>
         
-        <tr><th>Position</th><td contenteditable="true" data-field="position_name" data-type="text"><%= jobs[0].pos_id %></td></tr>
-        <tr><th>Selection Status</th><td contenteditable="true" data-field="selection_status" data-type="text"><%= jobs[0].selection_status %></td></tr>
+        <tr><th>Position</th><td data-field="position_name" data-type="list" data-options-source="/api/positions">><%= jobs[0].position_name %></td></tr>
+        <tr>
+            <th>Selection Status</th>
+            <td data-field="selection_status"
+                data-type="list"
+                data-options="Call,Interview,Awaiting decision,Undergoing medical check,Planned contract signing,Accepted,Rejected,Fired,Offer terminated">
+                <%= jobs[0].selection_status %>
+            </td>
+        </tr>
         <tr><th>Interview Date</th><td data-field="interview_date" data-type="date"><%= jobs[0].interview_date?.toISOString().split('T')[0] || '' %></td></tr>
         <tr><th>Interview Handler</th><td contenteditable="true" data-field="interview_handler" data-type="text"><%= jobs[0].interview_handler %></td></tr>
         <tr><th>Source</th><td contenteditable="true" data-field="source" data-type="text"><%= jobs[0].source %></td></tr>
         <tr><th>Job Offer</th><td data-field="job_offer" data-type="boolean"><%= jobs[0].job_offer ? 'True' : 'False' %></td></tr>
-        <tr><th>Candidate Decision</th><td contenteditable="true" data-field="candidate_decision" data-type="text"><%= jobs[0].candidate_decision %></td></tr>
+        <tr><th>Candidate Decision</th><td  data-field="candidate_decision" data-type="boolean"><%= jobs[0].candidate_decision ? 'Accepted' : 'Declined' %></td></tr>
         <tr><th>Refusal Reason</th><td contenteditable="true" data-field="refusal_reason" data-type="text"><%= jobs[0].refusal_reason %></td></tr>
         <tr><th>Work Start Date</th><td data-field="work_start_date" data-type="date"><%= jobs[0].work_start_date?.toISOString().split('T')[0] || '' %></td></tr>
     </table>

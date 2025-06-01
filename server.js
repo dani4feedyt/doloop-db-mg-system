@@ -157,6 +157,28 @@ app.listen(PORT, () => {
 });
 
 
+app.get('/api/positions', requireDbLogin, async (req, res) => {
+    try {
+        const pool = await sql.connect(req.session.dbConfig);
+        const result = await pool.request().query(`
+            SELECT position_name, places_left
+            FROM s_positions
+            WHERE places_left > 0
+        `);
+
+        const options = result.recordset.map(row => ({
+            name: `${row.position_name} (${row.places_left} left)`,
+            value: row.position_name
+        }));
+
+        res.json(options);
+    } catch (err) {
+        console.error('Failed to load positions:', err);
+        res.status(500).send('Could not load available positions');
+    }
+});
+
+
 app.get('/bio/:id', requireDbLogin, async (req, res) => {
     const userId = parseInt(req.params.id, 10);
 
@@ -193,6 +215,8 @@ app.get('/bio/:id', requireDbLogin, async (req, res) => {
         res.status(500).send('Database error');
     }
 });
+
+
 
 app.use(express.json());
 
@@ -339,18 +363,18 @@ app.get('/job/:id', requireDbLogin, async (req, res) => {
     }
 });
 
+
+
 app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
     const { field, value } = req.body;
     const userId = parseInt(req.params.id, 10);
 
     const allowedFields = {
-        'candidate_card': [
-            'name', 'surname', 'age', 'location'
-        ],
+        'candidate_card': ['name', 'surname', 'age', 'location'],
         'selection_card': [
             'selection_status', 'interview_date', 'interview_handler',
             'source', 'job_offer', 'candidate_decision',
-            'refusal_reason', 'work_start_date'
+            'refusal_reason', 'work_start_date', 'position_name'
         ]
     };
 
@@ -368,10 +392,68 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
 
     try {
         const pool = await sql.connect(req.session.dbConfig);
-        await pool.request()
-            .input('value', sql.VarChar, value)
-            .input('id', sql.Int, userId)
-            .query(`UPDATE ${tableToUpdate} SET [${field}] = @value WHERE u_id = @id`);
+
+        if (field === 'position_name') {
+            const posResult = await pool.request()
+                .input('position_name', sql.VarChar, value)
+                .query(`SELECT pos_id FROM s_positions WHERE position_name = @position_name`);
+
+            if (posResult.recordset.length === 0) {
+                return res.status(400).send('Invalid position name');
+            }
+
+            const pos_id = posResult.recordset[0].pos_id;
+
+            await pool.request()
+                .input('id', sql.Int, userId)
+                .input('pos_id', sql.Int, pos_id)
+                .query(`UPDATE selection_card SET pos_id = @pos_id WHERE u_id = @id`);
+
+        } else if (field === 'job_offer') {
+            const newOffer = value.toLowerCase() === 'true';
+
+            const current = await pool.request()
+                .input('id', sql.Int, userId)
+                .query(`
+                    SELECT job_offer, pos_id
+                    FROM selection_card
+                    WHERE u_id = @id
+                `);
+
+            const { job_offer, pos_id } = current.recordset[0];
+
+            if (newOffer && !job_offer) {
+                const posCheck = await pool.request()
+                    .input('pos_id', sql.Int, pos_id)
+                    .query(`SELECT places_left FROM s_positions WHERE pos_id = @pos_id`);
+
+                const placesLeft = posCheck.recordset[0]?.places_left ?? 0;
+
+                if (placesLeft <= 0) {
+                    return res.status(400).send('No available places for this position.');
+                }
+
+                await pool.request()
+                    .input('pos_id', sql.Int, pos_id)
+                    .query(`UPDATE s_positions SET places_left = places_left - 1 WHERE pos_id = @pos_id`);
+
+            } else if (!newOffer && job_offer) {
+                await pool.request()
+                    .input('pos_id', sql.Int, pos_id)
+                    .query(`UPDATE s_positions SET places_left = places_left + 1 WHERE pos_id = @pos_id`);
+            }
+
+            await pool.request()
+                .input('id', sql.Int, userId)
+                .input('value', sql.Bit, newOffer ? 1 : 0)
+                .query(`UPDATE selection_card SET job_offer = @value WHERE u_id = @id`);
+
+        } else {
+            await pool.request()
+                .input('value', sql.VarChar, value)
+                .input('id', sql.Int, userId)
+                .query(`UPDATE ${tableToUpdate} SET [${field}] = @value WHERE u_id = @id`);
+        }
 
         res.sendStatus(200);
     } catch (err) {
@@ -379,6 +461,7 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
         res.status(500).send('Database update error');
     }
 });
+
 
 app.get('/candidates', requireDbLogin, async (req, res) => {
     try {

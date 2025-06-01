@@ -14,6 +14,7 @@
                 <button id="prev-btn">←</button>
                 <button id="next-btn">→</button>
                 <button id="home">⌂</button>
+                <button id="toggle-view-btn"></button>
             </span>
         </h1>
     </nav>
@@ -33,7 +34,7 @@
 
         <tr>
             <th>Licenses</th>
-            <td data-field="licenses" data-type="list">
+            <td data-field="licenses" data-type="list" class="custom">
                 <ul id="licenseList" class="no-bullets">
                 <% licenses.forEach((lic) => { %>
                     <li class="license-item"><%= lic.license_name %></li>
