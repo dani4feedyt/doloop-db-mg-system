@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/css/style.css">
+    <title>Job Applications</title>
+</head>
+<body>
+    <h1>Job Application Card</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <% Object.keys(data[0]).forEach(key => { %>
+                    <th><%= key %></th>
+                <% }) %>
+            </tr>
+        </thead>
+        <tbody>
+            <% data.forEach(row => { %>
+                <tr>
+                    <% Object.values(row).forEach(val => { %>
+                        <td><%= val %></td>
+                    <% }) %>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</body>
+</html>

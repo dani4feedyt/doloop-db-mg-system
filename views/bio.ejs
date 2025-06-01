@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/css/style.css">
+    <meta name="csrf-token" content="<%= csrfToken %>">
+    <script type="module" src="/js/bio/bio.js" defer></script>
+    <title>Biography Card</title>
+</head>
+<body>
+    <nav class="bio-nav">
+        <h1>
+            Biography Card
+            <span class="navigation-buttons">
+                <button id="prev-btn">←</button>
+                <button id="next-btn">→</button>
+                <button id="home">⌂</button>
+            </span>
+        </h1>
+    </nav>
+
+    <table border="1" cellpadding="10" cellspacing="0" class="editable-table", id="bioTable" data-userid="<%= candidate.u_id %>">
+        <tr><th>Name</th><td contenteditable="true" data-field="name" data-type="text"><%= candidate.name %></td></tr>
+        <tr><th>Surname</th><td contenteditable="true" data-field="surname" data-type="text"><%= candidate.surname %></td></tr>
+        <tr><th>Email</th><td contenteditable="true" data-field="e-mail" data-type="email"><%= candidate['e-mail'] %></td></tr>
+        <tr><th>Phone</th><td contenteditable="true" data-field="phone_number" data-type="tel"><%= candidate.phone_number %></td></tr>
+        <tr><th>Location</th><td contenteditable="true" data-field="location" data-type="text"><%= candidate.location %></td></tr>
+        <tr><th>Age</th><td contenteditable="true" data-field="age" data-type="number"><%= candidate.age %></td></tr>
+        <tr><th>Gender</th><td contenteditable="true" data-field="gender" data-type="text"><%= candidate.gender %></td></tr>
+        <tr><th>CV</th><td contenteditable="true" data-field="cv"><%= candidate.cv %></td></tr>
+        <tr><th>LinkedIn</th><td contenteditable="true" data-field="linkedin" data-type="url"><%= candidate.linkedin %></td></tr>
+        <tr><th>Employment Status</th><td data-field="employment status" data-type="boolean"><%= candidate['employment status'] ? 'True' : 'False' %></td></tr>
+        <tr><th>Salary Expectations</th><td contenteditable="true" data-field="salary expectations" data-type="number"><%= candidate['salary expectations'] %></td></tr>
+
+        <tr>
+            <th>Licenses</th>
+            <td data-field="licenses" data-type="list">
+                <ul id="licenseList" class="no-bullets">
+                <% licenses.forEach((lic) => { %>
+                    <li class="license-item"><%= lic.license_name %></li>
+                <% }); %>
+                </ul>
+                <button type="button" id="add-license">Add License</button>
+            </td>
+        </tr>
+
+        <tr>
+            <th>Experience</th>
+            <td data-field="experience" data-type="exp-block">
+                <div class="experience-summary">
+                    <strong>Summary:</strong>
+                    <span class="summary-text" contenteditable="true"><%= candidate.experience_summary || '' %></span>
+                </div>
+
+                <ul id="occupationList" class="no-bullets">
+                    <% if (experience.length > 0) { %>
+                        <% experience.forEach(exp => { %>
+                            <li class="occupation-item"><%= exp.job_name %></li>
+                        <% }); %>
+                    <% } %>
+                </ul>
+                <button type="button" id="add-occupation">Add occupation</button>
+            </td>
+        </tr>
+
+        <tr><th>Future Contact</th><td data-field="future_contact" data-type="boolean"><%= candidate.future_contact ? 'True' : 'False' %></td></tr>
+        <tr><th>Contact Date</th><td contenteditable="true" data-field="contact_date" data-type="date"><%= candidate.contact_date.toISOString().split('T')[0] %></td></tr>
+        <tr><th>Comments</th><td contenteditable="true" data-field="comments" data-type="text"><%= candidate.comments %></td></tr>
+    </table>
+
+    
+</body>
+</html>

@@ -1,0 +1,46 @@
+ul.no-bullets {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+table.editable-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: Arial, sans-serif;
+}
+
+table.editable-table th, table.editable-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
+}
+
+table.editable-table th {
+  background-color: #f2f2f2;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.editable-table-nav h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* space between text and buttons */
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.navigation-buttons button {
+    font-size: 1rem;
+    padding: 0px 2px;
+    cursor: pointer;
+}
+
+.navigation-buttons button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
