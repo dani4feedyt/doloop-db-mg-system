@@ -15,6 +15,15 @@
                 <button id="next-btn">→</button>
                 <button id="home">⌂</button>
                 <button id="toggle-view-btn"></button>
+                <a href="/bio/new">
+                    <button type="button">Add New Candidate</button>
+                </a>
+                <form id="deleteForm" action="/bio/<%= person.u_id %>/delete" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" onclick="return confirm('Are you sure you want to delete this candidate?')" class="btn btn-danger">
+                        Delete Candidate
+                    </button>
+                </form>
             </span>
         </h1>
     </nav>
@@ -23,8 +32,8 @@
         <tr><th>Surname</th><td contenteditable="true" data-field="surname" data-type="text"><%= person.surname %></td></tr>
         <tr><th>Age</th><td contenteditable="true" data-field="age" data-type="number"><%= person.age %></td></tr>
         <tr><th>Location</th><td contenteditable="true" data-field="location" data-type="text"><%= person.location %></td></tr>
-        
-        <tr><th>Position</th><td data-field="position_name" data-type="list" data-options-source="/api/positions">><%= jobs[0].position_name %></td></tr>
+
+        <tr><th>Position</th><td data-field="position_name" data-type="list" data-options-source="/api/positions"><%= jobs[0].position_name %></td></tr>   
         <tr>
             <th>Selection Status</th>
             <td data-field="selection_status"
@@ -35,11 +44,20 @@
         </tr>
         <tr><th>Interview Date</th><td data-field="interview_date" data-type="date"><%= jobs[0].interview_date?.toISOString().split('T')[0] || '' %></td></tr>
         <tr><th>Interview Handler</th><td contenteditable="true" data-field="interview_handler" data-type="text"><%= jobs[0].interview_handler %></td></tr>
-        <tr><th>Source</th><td contenteditable="true" data-field="source" data-type="text"><%= jobs[0].source %></td></tr>
+
+        <tr>
+            <th>Source</th>
+            <td data-field="source"
+                data-type="list"
+                data-options="CV database,LinkedIn,Facebook,Referral,Careers page">
+                <%= jobs[0].source %>
+            </td>
+        </tr>
         <tr><th>Job Offer</th><td data-field="job_offer" data-type="boolean"><%= jobs[0].job_offer ? 'True' : 'False' %></td></tr>
         <tr><th>Candidate Decision</th><td  data-field="candidate_decision" data-type="boolean"><%= jobs[0].candidate_decision ? 'Accepted' : 'Declined' %></td></tr>
         <tr><th>Refusal Reason</th><td contenteditable="true" data-field="refusal_reason" data-type="text"><%= jobs[0].refusal_reason %></td></tr>
         <tr><th>Work Start Date</th><td data-field="work_start_date" data-type="date"><%= jobs[0].work_start_date?.toISOString().split('T')[0] || '' %></td></tr>
+        <tr><th>Comments</th><td contenteditable="true" data-field="comments" data-type="text"><%= jobs[0].comments %></td></tr>
     </table>
 </body>
 </html>

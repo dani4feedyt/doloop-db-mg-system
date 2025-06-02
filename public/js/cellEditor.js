@@ -49,20 +49,19 @@ export function attachCellEditors(csrfToken) {
         };
 
         if (type === 'list') {
-        cell.addEventListener('click', async () => {
-            if (cell.querySelector('select')) return;
+            cell.addEventListener('click', async () => {
+            if (cell.querySelector('select') || cell.querySelector('input')) return;
             if (cell.classList.contains('custom')) return;
 
             const currentValue = cell.textContent.trim();
             const select = document.createElement('select');
 
-            // Fetch from dynamic source if available
             let options = [];
             const optionsSource = cell.dataset.optionsSource;
             if (optionsSource) {
                 try {
                     const res = await fetch(optionsSource);
-                    options = await res.json(); // expected: [{ name, value }]
+                    options = await res.json();
                 } catch (e) {
                     console.error("Failed to fetch options:", e);
                     return alert('Could not load options.');
@@ -82,62 +81,122 @@ export function attachCellEditors(csrfToken) {
                 select.appendChild(option);
             });
 
+            if (cell.dataset.field != 'position_name'){
+                const otherOption = document.createElement('option');
+                otherOption.value = '__other__';
+                otherOption.textContent = 'Other...';
+                select.appendChild(otherOption);
+            }
+
+            cell.textContent = '';
+            cell.appendChild(select);
+            select.focus();
+
+            const save = async (valueToSave) => {
+                const success = await saveValue(valueToSave);
+                if (success) {
+                    cell.textContent = valueToSave;
+                } else {
+                    cell.textContent = currentValue;
+                }
+            };
+
+            select.addEventListener('change', () => {
+                const value = select.value;
+                if (value === '__other__') {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.placeholder = 'Enter custom value';
+                    cell.textContent = '';
+                    cell.appendChild(input);
+                    input.focus();
+
+                    const saveCustom = async () => {
+                        const customValue = input.value.trim();
+                        if (!customValue) {
+                            cell.textContent = currentValue;
+                            return;
+                        }
+
+                        await save(customValue);
+                    };
+
+                    input.addEventListener('blur', saveCustom);
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            input.blur();
+                        }
+                    });
+                } else {
+                    save(value);
+                }
+            });
+
+            select.addEventListener('blur', () => {
+                if (select.value !== '__other__') {
+                    save(select.value);
+                }
+            });
+        });
+
+        } if (type === 'boolean') {
+            cell.addEventListener('click', () => {
+            if (cell.querySelector('select')) return;
+
+            const originalValue = cell.textContent.trim().toLowerCase();
+
+            const booleanLabelPairs = [
+                { trueLabel: 'accepted', falseLabel: 'declined' },
+                { trueLabel: 'yes', falseLabel: 'no' },
+                { trueLabel: 'active', falseLabel: 'inactive' },
+                { trueLabel: 'currently employed', falseLabel: 'currently not employed' },
+                { trueLabel: 'true', falseLabel: 'false' } 
+                
+            ];
+
+            let matchedPair = booleanLabelPairs.find(pair =>
+                [pair.trueLabel, pair.falseLabel].includes(originalValue)
+            );
+
+            if (!matchedPair) {
+                matchedPair = booleanLabelPairs[booleanLabelPairs.length - 1];
+            }
+
+            const options = [matchedPair.trueLabel, matchedPair.falseLabel];
+
+            const currentBoolValue = (originalValue === matchedPair.trueLabel);
+
+            const select = document.createElement('select');
+
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.text = opt.charAt(0).toUpperCase() + opt.slice(1);
+                select.appendChild(option);
+            });
+
+            // Set selected option in <select> based on boolean value
+            select.value = currentBoolValue ? options[0] : options[1];
+
             cell.textContent = '';
             cell.appendChild(select);
             select.focus();
 
             const save = async () => {
-                const value = select.value;
-                const success = await saveValue(value);
+                const selectedValue = select.value.toLowerCase();
+                const boolForSaving = (selectedValue === options[0]) ? 'true' : 'false';
+
+                const success = await saveValue(boolForSaving);
                 if (success) {
-                    cell.textContent = value;
+                    cell.textContent = selectedValue.charAt(0).toUpperCase() + selectedValue.slice(1);
                 } else {
-                    // optional: revert or reload logic
                 }
             };
 
             select.addEventListener('blur', save);
             select.addEventListener('change', save);
         });
-
-
-        } else if (type === 'boolean') {
-            cell.addEventListener('click', () => {
-                if (cell.querySelector('select')) return;
-
-                const originalValue = cell.textContent.trim().toLowerCase();
-                const select = document.createElement('select');
-
-                const valuePairs = {
-                    'true': ['True', 'Accepted'],
-                    'false': ['False', 'Declined']
-                };
-
-                for (const [val, labels] of Object.entries(valuePairs)) {
-                    const option = document.createElement('option');
-                    option.value = val;
-                    option.text = labels.includes(originalValue) ? originalValue : labels[0];
-                    if (labels.includes(originalValue)) option.selected = true;
-                    select.appendChild(option);
-                }
-
-                cell.textContent = '';
-                cell.appendChild(select);
-                select.focus();
-
-                const save = async () => {
-                    const value = select.value;
-                    const success = await saveValue(value);
-                    if (success) {
-                        cell.textContent = valuePairs[value][0];
-                    } else {
-                        cell.textContent = originalValue;
-                    }
-                };
-
-                select.addEventListener('blur', save);
-                select.addEventListener('change', save);
-            });
 
         } else if (type === 'date') {
             cell.addEventListener('click', () => {
@@ -164,6 +223,93 @@ export function attachCellEditors(csrfToken) {
                 input.addEventListener('blur', save);
                 input.addEventListener('change', save);
             });
+
+       }  else if (type === 'file') {
+            cell.addEventListener('click', () => {
+            if (cell.querySelector('input[type="file"]')) return;
+
+            const hasCV = cell.dataset.cvExists === 'true';
+            const originalHTML = cell.innerHTML;
+            cell.innerHTML = '';
+
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/pdf';
+
+            const uploadButton = document.createElement('button');
+            uploadButton.textContent = 'Upload';
+            uploadButton.style.marginLeft = '8px';
+
+            cell.appendChild(input);
+            cell.appendChild(uploadButton);
+
+            if (hasCV) {
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'Download';
+                downloadBtn.style.marginLeft = '8px';
+                downloadBtn.addEventListener('click', () => {
+                    window.open(`/${resource}/${userId}/download-cv`, '_blank');
+                });
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.style.marginLeft = '8px';
+                deleteBtn.addEventListener('click', async () => {
+                    const confirmed = confirm('Are you sure you want to delete the CV?');
+                    if (!confirmed) return;
+
+                    try {
+                        const res = await fetch(`/${resource}/${userId}/delete-cv`, {
+                            method: 'DELETE',
+                            headers: {
+                                'CSRF-Token': csrfToken
+                            }
+                        });
+
+                        if (!res.ok) throw new Error(await res.text());
+
+                        alert('CV deleted.');
+                        cell.dataset.cvExists = 'false';
+                        cell.innerHTML = 'Add CV';
+                    } catch (err) {
+                        alert('Failed to delete CV: ' + err.message);
+                        cell.innerHTML = originalHTML;
+                    }
+                });
+
+                cell.appendChild(downloadBtn);
+                cell.appendChild(deleteBtn);
+            }
+
+            uploadButton.addEventListener('click', async () => {
+                const file = input.files[0];
+                if (!file) return alert('No file selected.');
+                if (file.type !== 'application/pdf') return alert('Only PDFs allowed.');
+
+                const formData = new FormData();
+                formData.append('cv', file);
+
+                try {
+                    const res = await fetch(`/${resource}/${userId}/upload-cv`, {
+                        method: 'POST',
+                        headers: {
+                            'CSRF-Token': csrfToken
+                        },
+                        body: formData
+                    });
+
+                    if (!res.ok) throw new Error(await res.text());
+
+                    alert('CV uploaded.');
+                    cell.dataset.cvExists = 'true';
+                    cell.innerHTML = 'Uploaded, click to change or download';
+                } catch (err) {
+                    alert('Upload failed: ' + err.message);
+                    cell.innerHTML = originalHTML;
+                }
+            });
+        });
+
 
         } else {
             if (cell.isContentEditable) {

@@ -5,6 +5,8 @@ const csrf = require('csurf');
 const helmet = require('helmet');
 const sql = require('mssql'); // SQL Server library
 const session = require('express-session');
+const multer = require('multer');
+const upload = multer();
 
 const app = express();
 const PORT = 3000;
@@ -179,6 +181,75 @@ app.get('/api/positions', requireDbLogin, async (req, res) => {
 });
 
 
+app.get('/bio/new', requireDbLogin, async (req, res) => {
+    try {
+        const pool = await sql.connect(req.session.dbConfig);
+
+        // Get next ID
+        const result = await pool.request().query(`SELECT ISNULL(MAX(u_id), 0) + 1 AS nextId FROM candidate_card`);
+        const newId = result.recordset[0].nextId;
+
+        // Insert new blank candidate with all fields
+        await pool.request()
+            .input('u_id', sql.Int, newId)
+            .input('name', sql.VarChar(sql.MAX), '')
+            .input('surname', sql.VarChar(sql.MAX), '')
+            .input('email', sql.VarChar(sql.MAX), '')
+            .input('phone_number', sql.VarChar(sql.MAX), '')
+            .input('location', sql.VarChar(sql.MAX), '')
+            .input('age', sql.Int, 0)
+            .input('gender', sql.VarChar(sql.MAX), '')
+            .input('cv', sql.VarBinary(sql.MAX), null)
+            .input('linkedin', sql.VarChar(sql.MAX), '')
+            .input('employment', sql.Bit, 0)
+            .input('salary', sql.VarChar(sql.MAX), '')
+            .input('future', sql.Bit, 0)
+            .input('contact_date', sql.Date, null)
+            .input('comments', sql.VarChar(sql.MAX), '')
+            .input('experience_summary', sql.VarChar(sql.MAX), '')
+            .query(`
+                INSERT INTO candidate_card (
+                    u_id, name, surname, [e-mail], phone_number, location, age, gender,
+                    cv, linkedin, [employment status], [salary expectations],
+                    future_contact, contact_date, comments, experience_summary
+                ) VALUES (
+                    @u_id, @name, @surname, @email, @phone_number, @location, @age, @gender,
+                    @cv, @linkedin, @employment, @salary,
+                    @future, @contact_date, @comments, @experience_summary
+                )
+            `);
+         const posResult = await pool.request().query(`
+            SELECT TOP 1 pos_id
+            FROM s_positions
+            ORDER BY places_left DESC
+        `);
+
+        if (posResult.recordset.length === 0) {
+            throw new Error('No available positions found.');
+        }
+
+        const selectedPosId = posResult.recordset[0].pos_id;
+
+        // Now insert into selection_card using that pos_id
+        await pool.request()
+            .input('u_id', sql.Int, newId)
+            .input('pos_id', sql.Int, selectedPosId)
+            .input('selection_status', sql.VarChar(sql.MAX), 'Not started')
+            .input('is_replacement', sql.Bit, 0)
+            .query(`
+                INSERT INTO selection_card (u_id, pos_id, selection_status, is_replacement)
+                VALUES (@u_id, @pos_id, @selection_status, @is_replacement)
+            `);
+
+        // Redirect to candidate's bio page
+        res.redirect(`/bio/${newId}`);
+
+    } catch (err) {
+        console.error('Error creating new candidate:', err);
+        res.status(500).send('Could not create new candidate.');
+    }
+});
+
 app.get('/bio/:id', requireDbLogin, async (req, res) => {
     const userId = parseInt(req.params.id, 10);
 
@@ -318,6 +389,26 @@ app.post('/bio/:id/update-experience-jobs', requireDbLogin, async (req, res) => 
 });
 
 
+app.post('/bio/:id/delete', requireDbLogin, async (req, res) => {
+    const userId = parseInt(req.params.id, 10);
+
+    try {
+        const pool = await sql.connect(req.session.dbConfig);
+
+        await pool.request().input('u_id', sql.Int, userId).query('DELETE FROM c_licenses WHERE u_id = @u_id');
+        await pool.request().input('u_id', sql.Int, userId).query('DELETE FROM c_exp_list WHERE u_id = @u_id');
+        await pool.request().input('u_id', sql.Int, userId).query('DELETE FROM selection_card WHERE u_id = @u_id');
+
+        await pool.request().input('u_id', sql.Int, userId).query('DELETE FROM candidate_card WHERE u_id = @u_id');
+
+        res.redirect('/');
+    } catch (err) {
+        console.error('Error deleting candidate:', err);
+        res.status(500).send('Failed to delete candidate.');
+    }
+});
+
+
 app.get('/job/:id', requireDbLogin, async (req, res) => {
     const userId = parseInt(req.params.id, 10);
 
@@ -328,7 +419,7 @@ app.get('/job/:id', requireDbLogin, async (req, res) => {
             SELECT 
                 p.position_name, s.selection_status, s.interview_date,
                 s.interview_handler, s.source, s.job_offer,
-                s.candidate_decision, s.refusal_reason, s.work_start_date,
+                s.candidate_decision, s.refusal_reason, s.work_start_date, s.comments,
 
                 c.name, c.surname, c.age, c.location
 
@@ -343,6 +434,7 @@ app.get('/job/:id', requireDbLogin, async (req, res) => {
         }
 
         const personInfo = {
+            u_id: userId,
             name: result.recordset[0].name,
             surname: result.recordset[0].surname,
             age: result.recordset[0].age,
@@ -374,7 +466,7 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
         'selection_card': [
             'selection_status', 'interview_date', 'interview_handler',
             'source', 'job_offer', 'candidate_decision',
-            'refusal_reason', 'work_start_date', 'position_name'
+            'refusal_reason', 'work_start_date', 'position_name', 'comments'
         ]
     };
 
@@ -394,7 +486,6 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
         const pool = await sql.connect(req.session.dbConfig);
 
         if (field === 'position_name') {
-            // Update position id by name
             const posResult = await pool.request()
                 .input('position_name', sql.VarChar, value)
                 .query(`SELECT pos_id FROM s_positions WHERE position_name = @position_name`);
@@ -411,7 +502,6 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
                 .query(`UPDATE selection_card SET pos_id = @pos_id WHERE u_id = @id`);
 
         } else if (field === 'selection_status') {
-            // When selection_status changes, check old value and update places_left accordingly
             const oldStatusResult = await pool.request()
                 .input('id', sql.Int, userId)
                 .query(`SELECT selection_status, pos_id FROM selection_card WHERE u_id = @id`);
@@ -425,13 +515,11 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
 
             const newStatus = value;
 
-            // Update selection_status field first
             await pool.request()
                 .input('value', sql.VarChar, newStatus)
                 .input('id', sql.Int, userId)
                 .query(`UPDATE selection_card SET selection_status = @value WHERE u_id = @id`);
 
-            // If changing to Accepted, decrement places_left if places are available
             if (oldStatus !== 'Accepted' && newStatus === 'Accepted') {
                 const posCheck = await pool.request()
                     .input('pos_id', sql.Int, pos_id)
@@ -440,7 +528,6 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
                 const placesLeft = posCheck.recordset[0]?.places_left ?? 0;
 
                 if (placesLeft <= 0) {
-                    // Revert the update because no places left
                     await pool.request()
                         .input('value', sql.VarChar, oldStatus)
                         .input('id', sql.Int, userId)
@@ -453,7 +540,6 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
                     .input('pos_id', sql.Int, pos_id)
                     .query(`UPDATE s_positions SET places_left = places_left - 1 WHERE pos_id = @pos_id`);
 
-            // If changing from Accepted to something else, increment places_left
             } else if (oldStatus === 'Accepted' && newStatus !== 'Accepted') {
                 await pool.request()
                     .input('pos_id', sql.Int, pos_id)
@@ -461,7 +547,6 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
             }
 
         } else {
-            // Update any other field
             await pool.request()
                 .input('value', sql.VarChar, value)
                 .input('id', sql.Int, userId)
@@ -475,6 +560,84 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
     }
 });
 
+
+app.post('/bio/:id/upload-cv', requireDbLogin, upload.single('cv'), async (req, res) => {
+    const userId = parseInt(req.params.id, 10);
+    const fileBuffer = req.file?.buffer;
+
+    if (!fileBuffer) {
+        return res.status(400).send('No file uploaded.');
+    }
+
+    try {
+        const pool = await sql.connect(req.session.dbConfig);
+
+        await pool.request()
+            .input('id', sql.Int, userId)
+            .input('cv', sql.VarBinary(sql.MAX), fileBuffer)
+            .query(`
+                UPDATE candidate_card
+                SET cv = @cv
+                WHERE u_id = @id
+            `);
+
+        res.sendStatus(200);
+    } catch (err) {
+        console.error('CV upload error:', err);
+        res.status(500).send('Database error during upload.');
+    }
+});
+
+
+app.get('/bio/:id/download-cv', requireDbLogin, async (req, res) => {
+    const userId = parseInt(req.params.id, 10);
+
+    try {
+        const pool = await sql.connect(req.session.dbConfig);
+
+        const result = await pool.request()
+            .input('id', sql.Int, userId)
+            .query(`
+                SELECT cv
+                FROM candidate_card
+                WHERE u_id = @id
+            `);
+
+        const cvBuffer = result.recordset[0]?.cv;
+
+        if (!cvBuffer) {
+            return res.status(404).send('CV not found.');
+        }
+
+        res.setHeader('Content-Disposition', 'attachment; filename="cv.pdf"');
+        res.setHeader('Content-Type', 'application/pdf');
+        res.send(cvBuffer);
+    } catch (err) {
+        console.error('CV download error:', err);
+        res.status(500).send('Database error during download.');
+    }
+});
+
+app.delete('/bio/:id/delete-cv', requireDbLogin, async (req, res) => {
+    const userId = parseInt(req.params.id, 10);
+
+    try {
+        const pool = await sql.connect(req.session.dbConfig);
+
+        await pool.request()
+            .input('id', sql.Int, userId)
+            .query(`
+                UPDATE candidate_card
+                SET cv = NULL
+                WHERE u_id = @id
+            `);
+
+        res.sendStatus(200);
+    } catch (err) {
+        console.error('CV delete error:', err);
+        res.status(500).send('Database error during deletion.');
+    }
+});
 
 app.get('/candidates', requireDbLogin, async (req, res) => {
     try {

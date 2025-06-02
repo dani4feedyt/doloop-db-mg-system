@@ -1,34 +1,37 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <link rel="stylesheet" href="/css/style.css">
-    
-    <title>Survey Results</title>
-    
-</head>
-<body>
-    <h1>All Candidates</h1>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="stylesheet" href="/css/style.css">
+        
+        <title>Survey Results</title>
+        
+    </head>
+    <body>
+        <h1>All Candidates</h1>
+        <a href="/bio/new">
+            <button type="button">Add New Candidate</button>
+        </a>
 
-    <form method="GET" action="/candidates"">
-        <input 
-            type="text" 
-            name="search" 
-            placeholder="Search by name, surname or location" 
-            value="<%= searchValue %>" 
-        />
-        <button type="submit">Search</button>
-    </form>
+        <form method="GET" action="/candidates"">
+            <input 
+                type="text" 
+                name="search" 
+                placeholder="Search query" 
+                value="<%= searchValue %>" 
+            />
+            <button type="submit">Search</button>
+        </form>
 
-    <div>
-        <% users.forEach(user => { %>
-            <div>
-                <p><strong><%= user.name %> <%= user.surname %></strong></p>
-                <p>Age: <%= user.age %></p>
-                <p>Location: <%= user.location %></p>
-                <a href="/bio/<%= user.u_id %>">Biography</a><br/>
-                <a href="/job/<%= user.u_id %>">Job Card</a>
-            </div>
-        <% }); %>
-    </div>
-</body>
-</html>
+        <div>
+            <% users.forEach(user => { %>
+                <div>
+                    <p><strong><%= user.name %> <%= user.surname %></strong></p>
+                    <p>Age: <%= user.age %></p>
+                    <p>Location: <%= user.location %></p>
+                    <a href="/bio/<%= user.u_id %>">Biography</a><br/>
+                    <a href="/job/<%= user.u_id %>">Job Card</a>
+                </div>
+            <% }); %>
+        </div>
+    </body>
+    </html>

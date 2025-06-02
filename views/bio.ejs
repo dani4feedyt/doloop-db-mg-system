@@ -15,6 +15,15 @@
                 <button id="next-btn">→</button>
                 <button id="home">⌂</button>
                 <button id="toggle-view-btn"></button>
+                <a href="/bio/new">
+                    <button type="button">Add New Candidate</button>
+                </a>
+                <form id="deleteForm" action="/bio/<%= candidate.u_id %>/delete" method="POST" style="margin-top: 1rem;">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" onclick="return confirm('Are you sure you want to delete this candidate?')" class="btn btn-danger">
+                        Delete Candidate
+                    </button>
+                </form>
             </span>
         </h1>
     </nav>
@@ -26,10 +35,19 @@
         <tr><th>Phone</th><td contenteditable="true" data-field="phone_number" data-type="tel"><%= candidate.phone_number %></td></tr>
         <tr><th>Location</th><td contenteditable="true" data-field="location" data-type="text"><%= candidate.location %></td></tr>
         <tr><th>Age</th><td contenteditable="true" data-field="age" data-type="number"><%= candidate.age %></td></tr>
-        <tr><th>Gender</th><td contenteditable="true" data-field="gender" data-type="text"><%= candidate.gender %></td></tr>
-        <tr><th>CV</th><td contenteditable="true" data-field="cv"><%= candidate.cv %></td></tr>
+        <tr><th>Gender</th><td data-field="gender" data-type="list" data-options="Male,Female"><%= candidate.gender %></td></tr>
+        <tr>
+            <th>CV</th>
+            <td data-field="cv" data-type="file" data-cv-exists="<%= candidate.cv ? 'true' : 'false' %>">
+                <% if (candidate.cv) { %>
+                Uploaded, click to change or download
+                <% } else { %>
+                Add CV
+                <% } %>
+            </td>
+        </tr>
         <tr><th>LinkedIn</th><td contenteditable="true" data-field="linkedin" data-type="url"><%= candidate.linkedin %></td></tr>
-        <tr><th>Employment Status</th><td data-field="employment status" data-type="boolean"><%= candidate['employment status'] ? 'True' : 'False' %></td></tr>
+        <tr><th>Employment Status</th><td data-field="employment status" data-type="boolean"><%= candidate['employment status'] ? 'Currently employed' : 'Currently not employed' %></td></tr>
         <tr><th>Salary Expectations</th><td contenteditable="true" data-field="salary expectations" data-type="number"><%= candidate['salary expectations'] %></td></tr>
 
         <tr>
@@ -64,7 +82,7 @@
         </tr>
 
         <tr><th>Future Contact</th><td data-field="future_contact" data-type="boolean"><%= candidate.future_contact ? 'True' : 'False' %></td></tr>
-        <tr><th>Contact Date</th><td contenteditable="true" data-field="contact_date" data-type="date"><%= candidate.contact_date.toISOString().split('T')[0] %></td></tr>
+        <tr><th>Contact Date</th><td contenteditable="true" data-field="contact_date" data-type="date"><%= candidate.contact_date ? candidate.contact_date.toISOString().split('T')[0] : '' %></td></tr>
         <tr><th>Comments</th><td contenteditable="true" data-field="comments" data-type="text"><%= candidate.comments %></td></tr>
     </table>
 
