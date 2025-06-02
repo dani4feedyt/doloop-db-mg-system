@@ -11,7 +11,6 @@ const upload = multer();
 const app = express();
 const PORT = 3000;
 
-// Set view engine
 app.set('view engine', 'ejs');
 
 // Helmet CSP configuration
@@ -71,7 +70,6 @@ app.use(requireDbLogin);
 
 
 
-// Database config
 function buildDbConfig(user, password) {
     return {
         user,
@@ -132,8 +130,6 @@ function requireDbLogin(req, res, next) {
 
 
 
-
-// Route to display records
 app.get('/', requireDbLogin, async (req, res) => {
     try {
         await sql.connect(req.session.dbConfig);
@@ -145,7 +141,6 @@ app.get('/', requireDbLogin, async (req, res) => {
     }
 });
 
-// CSRF error handler
 app.use((err, req, res, next) => {
     if (err.code === 'EBADCSRFTOKEN') {
         res.status(403).send('Forbidden - invalid CSRF token');
@@ -185,11 +180,9 @@ app.get('/bio/new', requireDbLogin, async (req, res) => {
     try {
         const pool = await sql.connect(req.session.dbConfig);
 
-        // Get next ID
         const result = await pool.request().query(`SELECT ISNULL(MAX(u_id), 0) + 1 AS nextId FROM candidate_card`);
         const newId = result.recordset[0].nextId;
 
-        // Insert new blank candidate with all fields
         await pool.request()
             .input('u_id', sql.Int, newId)
             .input('name', sql.VarChar(sql.MAX), '')
@@ -230,7 +223,6 @@ app.get('/bio/new', requireDbLogin, async (req, res) => {
 
         const selectedPosId = posResult.recordset[0].pos_id;
 
-        // Now insert into selection_card using that pos_id
         await pool.request()
             .input('u_id', sql.Int, newId)
             .input('pos_id', sql.Int, selectedPosId)
@@ -241,7 +233,6 @@ app.get('/bio/new', requireDbLogin, async (req, res) => {
                 VALUES (@u_id, @pos_id, @selection_status, @is_replacement)
             `);
 
-        // Redirect to candidate's bio page
         res.redirect(`/bio/${newId}`);
 
     } catch (err) {
@@ -366,14 +357,12 @@ app.post('/bio/:id/update-experience-jobs', requireDbLogin, async (req, res) => 
     try {
         const pool = await sql.connect(req.session.dbConfig);
 
-        // Clear previous jobs for this user
         await pool.request()
             .input('userId', sql.Int, userId)
             .query('DELETE FROM c_exp_list WHERE u_id = @userId');
 
-        // Insert new job names
         for (const job of job_names) {
-            if (!job) continue; // skip empty values
+            if (!job) continue;
 
             await pool.request()
                 .input('userId', sql.Int, userId)

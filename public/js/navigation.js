@@ -6,7 +6,7 @@ export function initNavigation() {
 
     function getCurrentIndexAndCategory() {
         const pathParts = window.location.pathname.split('/');
-        const category = pathParts[1]; // "bio" or "job"
+        const category = pathParts[1];
         const lastPart = pathParts[pathParts.length - 1];
         const index = parseInt(lastPart, 10);
         return [isNaN(index) ? 1 : index, category];

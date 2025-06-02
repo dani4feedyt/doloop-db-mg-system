@@ -1,3 +1,11 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background-color: #f9f9f9;
+  color: #333;
+}
+
+
 ul.no-bullets {
   list-style-type: none;
   padding-left: 0;
@@ -7,12 +15,17 @@ table.editable-table {
   border-collapse: collapse;
   width: 100%;
   font-family: Arial, sans-serif;
+  table-layout: fixed;
 }
 
-table.editable-table th, table.editable-table td {
+table.editable-table th,
+table.editable-table td {
   border: 1px solid #ccc;
   padding: 10px;
   text-align: left;
+  overflow: hidden;
+  white-space: nowrap; 
+  text-overflow: ellipsis; 
 }
 
 table.editable-table th {
@@ -20,27 +33,117 @@ table.editable-table th {
 }
 
 nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .editable-table-nav h1 {
-    display: flex;
-    align-items: center;
-    gap: 10px; /* space between text and buttons */
-    font-size: 1.8rem;
-    margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.8rem;
+  margin: 0;
 }
 
 .navigation-buttons button {
-    font-size: 1rem;
-    padding: 0px 2px;
-    cursor: pointer;
+  font-size: 1rem;
+  padding: 0px 2px;
+  cursor: pointer;
 }
 
 .navigation-buttons button:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.editable-table-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 10px;
+}
+
+.editable-table-nav h1 {
+  font-size: 2rem;
+  margin: 0;
+  color: #222;
+}
+
+.navigation-buttons button {
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  background-color: #000000;
+  border: none;
+  color: white;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.navigation-buttons button:hover {
+  background-color: #353535;
+}
+
+.search-form {
+  margin-bottom: 20px;
+}
+
+.search-form input[type="text"] {
+  padding: 8px;
+  font-size: 1rem;
+  width: 250px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.search-form button {
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  margin-left: 8px;
+  cursor: pointer;
+  background-color: #000000;
+  border: none;
+  color: white;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+.search-form button:hover {
+  background-color: #000000;
+}
+
+.candidates-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.candidate-card {
+  background-color: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.candidate-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.candidate-card p {
+  margin: 6px 0;
+}
+
+.candidate-card .links a {
+  text-decoration: none;
+  color: #000000;
+  font-weight: 600;
+  margin-right: 10px;
+}
+
+.candidate-card .links a:hover {
+  text-decoration: underline;
 }

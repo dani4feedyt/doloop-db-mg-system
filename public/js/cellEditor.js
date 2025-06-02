@@ -176,7 +176,6 @@ export function attachCellEditors(csrfToken) {
                 select.appendChild(option);
             });
 
-            // Set selected option in <select> based on boolean value
             select.value = currentBoolValue ? options[0] : options[1];
 
             cell.textContent = '';
