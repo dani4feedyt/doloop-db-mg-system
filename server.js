@@ -3,10 +3,12 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const csrf = require('csurf');
 const helmet = require('helmet');
-const sql = require('mssql'); // SQL Server library
+const sql = require('mssql');
 const session = require('express-session');
 const multer = require('multer');
 const upload = multer();
+const startCronJobs = require('./cronJobs');
+
 
 const app = express();
 const PORT = 3000;
@@ -41,6 +43,9 @@ app.use(helmet({
 
 app.use(cookieParser());
 
+require('dotenv').config();
+
+
 app.use(session({
     secret: 'i-dont-know-what-to-put-here', // change later
     resave: false,
@@ -74,8 +79,8 @@ function buildDbConfig(user, password) {
     return {
         user,
         password,
-        server: 'localhost',
-        database: 'db_1',
+        server: process.env.DB_SERVER,
+        database: process.env.DB_NAME,
         options: {
             encrypt: true,
             trustServerCertificate: true
@@ -148,6 +153,8 @@ app.use((err, req, res, next) => {
         next(err);
     }
 });
+
+startCronJobs();
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
