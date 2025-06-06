@@ -19,6 +19,11 @@ export function attachCellEditors(csrfToken) {
     const isValidURL = val => /^https?:\/\/.+/.test(val);
     
     table.querySelectorAll('td[data-field]').forEach(cell => {
+
+        if (!cell.dataset.originalValue) {
+        cell.dataset.originalValue = cell.textContent.trim();
+        }
+
         const field = cell.dataset.field;
         const type = cell.dataset.type || 'text';
 
@@ -313,28 +318,37 @@ export function attachCellEditors(csrfToken) {
         } else {
             if (cell.isContentEditable) {
                 cell.addEventListener('blur', async () => {
-                    const value = cell.textContent.trim();
+                const value = cell.textContent.trim();
 
-                    if (type === 'number' && isNaN(value)) {
-                        alert('Please enter a valid number.');
-                        return;
-                    }
-                    if (type === 'email' && !isValidEmail(value)) {
-                        alert('Please enter a valid email address.');
-                        return;
-                    }
-                    if (type === 'url' && !isValidURL(value)) {
-                        alert('Please enter a valid URL.');
-                        return;
-                    }
+                if (type === 'number' && isNaN(value)) {
+                    alert('Please enter a valid number.');
+                    cell.textContent = cell.dataset.originalValue;
+                    // Optionally refocus for user correction:
+                    
+                    return;
+                }
+                if (type === 'email' && !isValidEmail(value)) {
+                    alert('Please enter a valid email address.');
+                    cell.textContent = cell.dataset.originalValue;
+                    
+                    return;
+                }
+                if (type === 'url' && !isValidURL(value)) {
+                    alert('Please enter a valid URL.');
+                    cell.textContent = cell.dataset.originalValue;
+                    
+                    return;
+                }
 
-                    const originalValue = cell.dataset.originalValue || '';
-                    const success = await saveValue(value);
-                    if (!success) {
-                        cell.textContent = originalValue;
-                    } else {
-                        cell.dataset.originalValue = value;
-                    }
+                const success = await saveValue(value);
+                if (!success) {
+                    alert('Save failed, reverting to last valid value.');
+                    cell.textContent = cell.dataset.originalValue;
+                    
+                } else {
+                cell.dataset.originalValue = value;
+                }
+
                 });
             }
         }
