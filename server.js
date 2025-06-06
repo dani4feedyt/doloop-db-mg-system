@@ -134,7 +134,6 @@ function requireDbLogin(req, res, next) {
 }
 
 
-
 app.get('/', requireDbLogin, async (req, res) => {
     try {
         await sql.connect(req.session.dbConfig);
@@ -395,10 +394,6 @@ app.get('/bio/:id', requireDbLogin, async (req, res) => {
         res.status(500).send('Database error');
     }
 });
-
-
-
-
 
 app.post('/bio/:id/update-field', requireDbLogin, async (req, res) => {
     const { field, value } = req.body;

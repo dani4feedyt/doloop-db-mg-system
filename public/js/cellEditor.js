@@ -323,20 +323,16 @@ export function attachCellEditors(csrfToken) {
                 if (type === 'number' && isNaN(value)) {
                     alert('Please enter a valid number.');
                     cell.textContent = cell.dataset.originalValue;
-                    // Optionally refocus for user correction:
-                    
                     return;
                 }
                 if (type === 'email' && !isValidEmail(value)) {
                     alert('Please enter a valid email address.');
                     cell.textContent = cell.dataset.originalValue;
-                    
                     return;
                 }
                 if (type === 'url' && !isValidURL(value)) {
                     alert('Please enter a valid URL.');
                     cell.textContent = cell.dataset.originalValue;
-                    
                     return;
                 }
 
