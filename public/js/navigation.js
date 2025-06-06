@@ -6,11 +6,10 @@ export function initNavigation() {
     const deleteBtn = document.getElementById("delete-btn");
 
     function getCurrentIndexAndCategory() {
-        const pathParts = window.location.pathname.split('/');
-        const category = pathParts[1];
-        const lastPart = pathParts[pathParts.length - 1];
-        const index = parseInt(lastPart, 10);
-        return [isNaN(index) ? 1 : index, category];
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const category = pathParts[0];
+        const index = parseInt(pathParts[1], 10);
+        return [!isNaN(index) ? index : null, category];
     }
 
     function updateButtons() {
@@ -56,8 +55,9 @@ export function initNavigation() {
     });
 
     deleteBtn?.addEventListener("click", () => {
-        if (confirm('Are you sure you want to delete this candidate?')) {
+        if (confirm('Are you sure you want to delete this card?')) {
             const [currentIndex, category] = getCurrentIndexAndCategory();
+            
             fetch(`/${category}/${currentIndex}/delete`, {
                 method: 'POST',
                 headers: {
@@ -65,9 +65,14 @@ export function initNavigation() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({})
+                
             }).then(res => {
                 if (res.ok) {
-                    window.location.href = `/`;
+                    if (category!="bio"){
+                        window.location.href = `/${category}`;
+                    } else {
+                        window.location.href = '/candidates';
+                    }
                 } else {
                     alert('Delete failed.');
                 }

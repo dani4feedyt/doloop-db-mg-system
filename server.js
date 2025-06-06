@@ -164,6 +164,42 @@ app.listen(PORT, () => {
 app.use(express.json());
 
 
+app.get('/positions/new', requireDbLogin, async (req, res) => {
+    try {
+        const pool = await sql.connect(req.session.dbConfig);
+
+        const result = await pool.request().query(`
+            SELECT ISNULL(MAX(pos_id), 0) + 1 AS nextId FROM s_positions
+        `);
+
+        const newPosId = result.recordset[0].nextId;
+        if (!Number.isInteger(newPosId)) {
+            throw new Error(`Invalid nextId received: ${newPosId}`);
+        }
+
+        await pool.request()
+            .input('pos_id', sql.Int, newPosId)
+            .input('position_name', sql.VarChar(sql.MAX), '')
+            .input('places_count', sql.Int, 1)
+            .input('places_left', sql.Int, 1)
+            .input('creation_date', sql.Date, new Date())
+            .query(`
+                INSERT INTO s_positions (
+                    pos_id, position_name, places_count, places_left, creation_date
+                ) VALUES (
+                    @pos_id, @position_name, @places_count, @places_left, @creation_date
+                )
+            `);
+
+        res.redirect(`/positions/${newPosId}`);
+
+    } catch (err) {
+        console.error('Error creating new position:', err);
+        res.status(500).send('Could not create new position.');
+    }
+});
+
+
 app.get('/positions/:id', requireDbLogin, async (req, res) => {
     const posId = parseInt(req.params.id, 10);
 
@@ -218,6 +254,24 @@ app.post('/positions/:id/update-field', requireDbLogin, async (req, res) => {
 });
 
 
+app.post('/positions/:id/delete', requireDbLogin, async (req, res) => {
+    const posId = parseInt(req.params.id, 10);
+
+    try {
+        const pool = await sql.connect(req.session.dbConfig);
+
+        await pool.request()
+            .input('pos_id', sql.Int, posId)
+            .query('DELETE FROM s_positions WHERE pos_id = @pos_id');
+
+        res.status(200).send('Deleted');
+    } catch (err) {
+        console.error('Error deleting position:', err);
+        res.status(500).send('Failed to delete position.');
+    }
+});
+
+
 app.get('/api/positions', requireDbLogin, async (req, res) => {
     try {
         const pool = await sql.connect(req.session.dbConfig);
@@ -236,42 +290,6 @@ app.get('/api/positions', requireDbLogin, async (req, res) => {
     } catch (err) {
         console.error('Failed to load positions:', err);
         res.status(500).send('Could not load available positions');
-    }
-});
-
-app.get('/positions/new', requireDbLogin, async (req, res) => {
-    try {
-        const pool = await sql.connect(req.session.dbConfig);
-
-        const result = await pool.request().query(`
-            SELECT ISNULL(MAX(pos_id), 0) + 1 AS nextId FROM s_positions
-        `);
-
-        const newPosId = result.recordset[0].nextId;
-        console.log('newPosId from DB:', newPosId);
-        if (!Number.isInteger(newPosId)) {
-            throw new Error(`Invalid nextId received: ${newPosId}`);
-        }
-
-        await pool.request()
-            .input('pos_id', sql.Int, newPosId)
-            .input('position_name', sql.VarChar(sql.MAX), '')
-            .input('places_count', sql.Int, 1)
-            .input('places_left', sql.Int, 1)
-            .input('creation_date', sql.Date, new Date())
-            .query(`
-                INSERT INTO s_positions (
-                    pos_id, position_name, places_count, places_left, creation_date
-                ) VALUES (
-                    @pos_id, @position_name, @places_count, @places_left, @creation_date
-                )
-            `);
-
-        res.redirect(`/positions/${newPosId}`);
-
-    } catch (err) {
-        console.error('Error creating new position:', err);
-        res.status(500).send('Could not create new position.');
     }
 });
 

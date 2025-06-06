@@ -142,13 +142,13 @@ nav .navigation-buttons form {
   background-color: #000000;
 }
 
-.candidates-list {
+.interactive-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 20px;
 }
 
-.candidate-card {
+.interactive-card {
   background-color: white;
   padding: 15px 20px;
   border-radius: 8px;
@@ -156,21 +156,21 @@ nav .navigation-buttons form {
   transition: box-shadow 0.3s ease;
 }
 
-.candidate-card:hover {
+.interactive-card:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-.candidate-card p {
+.interactive-card p {
   margin: 6px 0;
 }
 
-.candidate-card .links a {
+.interactive-card .links a {
   text-decoration: none;
   color: #000000;
   font-weight: 600;
   margin-right: 10px;
 }
 
-.candidate-card .links a:hover {
+.interactive-card .links a:hover {
   text-decoration: underline;
 }

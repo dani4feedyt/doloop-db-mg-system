@@ -27,9 +27,9 @@
         <button type="submit">Search</button>
     </form>
 
-    <div class="candidates-list">
+    <div class="interactive-list">
         <% positions.forEach(pos => { %>
-            <div class="candidate-card">
+            <div class="interactive-card">
                 <p><strong><%= pos.position_name %></strong></p>
                 <p>Created: <%= pos.creation_date.toISOString().split('T')[0] %></p>
                 <p>Places: <%= pos.places_count %>, Left: <%= pos.places_left %></p>
