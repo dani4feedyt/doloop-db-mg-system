@@ -3,6 +3,7 @@ export function initNavigation() {
     const nextBtn = document.getElementById("next-btn");
     const homeBtn = document.getElementById("home");
     const toggleViewBtn = document.getElementById("toggle-view-btn");
+    const deleteBtn = document.getElementById("delete-btn");
 
     function getCurrentIndexAndCategory() {
         const pathParts = window.location.pathname.split('/');
@@ -52,6 +53,26 @@ export function initNavigation() {
         const [currentIndex, category] = getCurrentIndexAndCategory();
         const newCategory = category === 'bio' ? 'job' : 'bio';
         window.location.href = `/${newCategory}/${currentIndex}`;
+    });
+
+    deleteBtn?.addEventListener("click", () => {
+        if (confirm('Are you sure you want to delete this candidate?')) {
+            const [currentIndex, category] = getCurrentIndexAndCategory();
+            fetch(`/${category}/${currentIndex}/delete`, {
+                method: 'POST',
+                headers: {
+                    'CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            }).then(res => {
+                if (res.ok) {
+                    window.location.href = `/`;
+                } else {
+                    alert('Delete failed.');
+                }
+            }).catch(() => alert('Delete failed.'));
+        }
     });
 
     updateButtons();

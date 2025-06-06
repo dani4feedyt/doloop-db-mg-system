@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/css/style.css">
+    <meta name="csrf-token" content="<%= csrfToken %>">
+    <script type="module" src="/js/pos/pos.js" defer></script>
+    <title>Position Card</title>
+</head>
+<body>
+    <nav class="editable-table-nav">
+        <h1>
+            Position Card
+            <div class="navigation-buttons">
+                <button id="prev-btn">←</button>
+                <button id="next-btn">→</button>
+                <a href="/positions" class="btn-nav">↑</a>
+                <button id="home">⌂</button>
+                <a href="/positions/new" class="btn-nav">Add New Position</a>
+                <button id="delete-btn" class="btn btn-danger">Delete Position</button>
+                </form>
+            </div>
+        </h1>
+    </nav>
+
+    <table border="1" cellpadding="10" cellspacing="0" class="editable-table" id="posTable" data-posid="<%= position.pos_id %>">
+        <tr><th>Position Name</th><td contenteditable="true" data-field="position_name" data-type="text"><%= position.position_name %></td></tr>
+        <tr><th>Places Count</th><td contenteditable="true" data-field="places_count" data-type="number"><%= position.places_count %></td></tr>
+        <tr><th>Places Left</th><td contenteditable="true" data-field="places_left" data-type="number"><%= position.places_left %></td></tr>
+        <tr><th>Creation Date</th><td contenteditable="true" data-field="creation_date" data-type="date"><%= position.creation_date.toISOString().split('T')[0] %></td></tr>
+    </table>
+</body>
+</html>

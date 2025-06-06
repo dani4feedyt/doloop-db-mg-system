@@ -161,6 +161,63 @@ app.listen(PORT, () => {
 });
 
 
+app.use(express.json());
+
+
+app.get('/positions/:id', requireDbLogin, async (req, res) => {
+    const posId = parseInt(req.params.id, 10);
+
+    try {
+        await sql.connect(req.session.dbConfig);
+
+        const result = await sql.query(`
+            SELECT * FROM s_positions WHERE pos_id = ${posId}
+        `);
+
+        if (result.recordset.length === 0) {
+            return res.status(404).send('Position not found');
+        }
+
+        const position = result.recordset[0];
+
+        res.render('pos', {
+            position,
+            csrfToken: req.csrfToken()
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Database error');
+    }
+});
+
+app.post('/positions/:id/update-field', requireDbLogin, async (req, res) => {
+    const { field, value } = req.body;
+    const posId = parseInt(req.params.id, 10);
+
+    const allowedFields = [
+        'position_name', 'places_count', 'places_left', 'creation_date'
+    ];
+
+    if (!allowedFields.includes(field)) {
+        return res.status(400).send('Invalid field');
+    }
+
+    try {
+        const pool = await sql.connect(req.session.dbConfig);
+        await pool.request()
+            .input('value', sql.VarChar, value)
+            .input('id', sql.Int, posId)
+            .query(`UPDATE s_positions SET [${field}] = @value WHERE pos_id = @id`);
+
+        res.sendStatus(200);
+    } catch (err) {
+        console.error('DB update error:', err);
+        res.status(500).send('Database update error');
+    }
+});
+
+
 app.get('/api/positions', requireDbLogin, async (req, res) => {
     try {
         const pool = await sql.connect(req.session.dbConfig);
@@ -179,6 +236,42 @@ app.get('/api/positions', requireDbLogin, async (req, res) => {
     } catch (err) {
         console.error('Failed to load positions:', err);
         res.status(500).send('Could not load available positions');
+    }
+});
+
+app.get('/positions/new', requireDbLogin, async (req, res) => {
+    try {
+        const pool = await sql.connect(req.session.dbConfig);
+
+        const result = await pool.request().query(`
+            SELECT ISNULL(MAX(pos_id), 0) + 1 AS nextId FROM s_positions
+        `);
+
+        const newPosId = result.recordset[0].nextId;
+        console.log('newPosId from DB:', newPosId);
+        if (!Number.isInteger(newPosId)) {
+            throw new Error(`Invalid nextId received: ${newPosId}`);
+        }
+
+        await pool.request()
+            .input('pos_id', sql.Int, newPosId)
+            .input('position_name', sql.VarChar(sql.MAX), '')
+            .input('places_count', sql.Int, 1)
+            .input('places_left', sql.Int, 1)
+            .input('creation_date', sql.Date, new Date())
+            .query(`
+                INSERT INTO s_positions (
+                    pos_id, position_name, places_count, places_left, creation_date
+                ) VALUES (
+                    @pos_id, @position_name, @places_count, @places_left, @creation_date
+                )
+            `);
+
+        res.redirect(`/positions/${newPosId}`);
+
+    } catch (err) {
+        console.error('Error creating new position:', err);
+        res.status(500).send('Could not create new position.');
     }
 });
 
@@ -287,7 +380,7 @@ app.get('/bio/:id', requireDbLogin, async (req, res) => {
 
 
 
-app.use(express.json());
+
 
 app.post('/bio/:id/update-field', requireDbLogin, async (req, res) => {
     const { field, value } = req.body;
@@ -397,7 +490,7 @@ app.post('/bio/:id/delete', requireDbLogin, async (req, res) => {
 
         await pool.request().input('u_id', sql.Int, userId).query('DELETE FROM candidate_card WHERE u_id = @u_id');
 
-        res.redirect('/');
+        res.status(200).send({ message: 'Deleted successfully' });
     } catch (err) {
         console.error('Error deleting candidate:', err);
         res.status(500).send('Failed to delete candidate.');
@@ -655,12 +748,40 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
 
         res.render('candidates', {
             users: result.recordset,
-            searchValue: search
+            searchValue: search,
+            csrfToken: req.csrfToken()
         });
 
     } catch (err) {
         console.error(err);
         res.status(500).send('Error fetching candidates');
+    }
+});
+
+app.get('/positions', requireDbLogin, async (req, res) => {
+    try {
+        const search = req.query.search || '';
+        const query = `
+            SELECT pos_id, position_name, places_count, places_left, creation_date
+            FROM s_positions
+            WHERE position_name LIKE @search
+        `;
+
+        const pool = await sql.connect(req.session.dbConfig);
+        const request = pool.request();
+        const result = await request
+            .input('search', sql.VarChar, `%${search}%`)
+            .query(query);
+
+        res.render('positions', {
+            positions: result.recordset,
+            searchValue: search,
+            csrfToken: req.csrfToken()
+        });
+
+    } catch (err) {
+        console.error('Error fetching positions:', err);
+        res.status(500).send('Error fetching positions');
     }
 });
 

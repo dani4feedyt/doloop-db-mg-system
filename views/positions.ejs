@@ -4,38 +4,37 @@
     <link rel="stylesheet" href="/css/style.css">
     <meta name="csrf-token" content="<%= csrfToken %>">
     <script type="module" src="/js/pos/pos.js" defer></script>
-    <title>All Candidates</title>
+    <title>All Positions</title>
 </head>
 <body>
     <nav class="editable-table-nav">
-        <h1>All Candidates
+        <h1>All Positions
         <div class="navigation-buttons">
             <a href="/" class="btn-nav">↑</a>
             <button id="home">⌂</button>
-            <a href="/bio/new" class="btn-nav">Add New Candidate</a>
+            <a href="/positions/new" class="btn-nav">Add New Position</a>
         </div>
         </h1>
     </nav>
 
-    <form method="GET" action="/candidates" class="search-form">
+    <form method="GET" action="/positions" class="search-form">
         <input 
             type="text" 
             name="search" 
-            placeholder="Search query" 
+            placeholder="Search by position name" 
             value="<%= searchValue %>" 
         />
         <button type="submit">Search</button>
     </form>
 
     <div class="candidates-list">
-        <% users.forEach(user => { %>
+        <% positions.forEach(pos => { %>
             <div class="candidate-card">
-                <p><strong><%= user.name %> <%= user.surname %></strong></p>
-                <p>Age: <%= user.age %></p>
-                <p>Location: <%= user.location %></p>
+                <p><strong><%= pos.position_name %></strong></p>
+                <p>Created: <%= pos.creation_date.toISOString().split('T')[0] %></p>
+                <p>Places: <%= pos.places_count %>, Left: <%= pos.places_left %></p>
                 <div class="links">
-                    <a href="/bio/<%= user.u_id %>">Biography</a> | 
-                    <a href="/job/<%= user.u_id %>">Job Card</a>
+                    <a href="/positions/<%= pos.pos_id %>">View Position</a>
                 </div>
             </div>
         <% }); %>
