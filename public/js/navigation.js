@@ -57,8 +57,14 @@ export function initNavigation() {
     deleteBtn?.addEventListener("click", () => {
         if (confirm('Are you sure you want to delete this card?')) {
             const [currentIndex, category] = getCurrentIndexAndCategory();
+
+            let source = category
+
+            if (category=="job"){
+                source = "bio";
+            }
             
-            fetch(`/${category}/${currentIndex}/delete`, {
+            fetch(`/${source}/${currentIndex}/delete`, {
                 method: 'POST',
                 headers: {
                     'CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
@@ -68,8 +74,8 @@ export function initNavigation() {
                 
             }).then(res => {
                 if (res.ok) {
-                    if (category!="bio"){
-                        window.location.href = `/${category}`;
+                    if (source!="bio"){
+                        window.location.href = `/${source}`;
                     } else {
                         window.location.href = '/candidates';
                     }
