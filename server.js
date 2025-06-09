@@ -47,7 +47,7 @@ require('dotenv').config();
 
 
 app.use(session({
-    secret: 'i-dont-know-what-to-put-here', // change later
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: {
