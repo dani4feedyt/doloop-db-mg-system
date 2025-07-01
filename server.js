@@ -744,23 +744,44 @@ app.delete('/bio/:id/delete-cv', requireDbLogin, async (req, res) => {
 app.get('/candidates', requireDbLogin, async (req, res) => {
     try {
         const search = req.query.search || '';
+
         const query = `
-            SELECT u_id, name, surname, age, location 
-            FROM candidate_card 
+            SELECT 
+                c.u_id, c.name, c.surname,
+                c.contact_date,
+                s.interview_date, s.selection_status, s.job_offer,
+                p.position_name,
+                c.created_at
+            FROM candidate_card c
+            LEFT JOIN selection_card s ON c.u_id = s.u_id
+            LEFT JOIN s_positions p ON s.pos_id = p.pos_id
             WHERE 
-                name LIKE @search OR 
-                surname LIKE @search OR 
-                location LIKE @search
+                c.name LIKE @search OR 
+                c.surname LIKE @search OR 
+                p.position_name LIKE @search
         `;
 
         const pool = await sql.connect(req.session.dbConfig);
-        const request = pool.request();           
-        const result = await request
+        const result = await pool.request()
             .input('search', sql.VarChar, `%${search}%`)
             .query(query);
 
+        const groupedCandidates = {};
+
+        result.recordset.forEach(user => {
+            const position = user.position_name || 'Unassigned';
+            if (!groupedCandidates[position]) {
+                groupedCandidates[position] = [];
+            }
+            groupedCandidates[position].push(user);
+        });
+
+        Object.keys(groupedCandidates).forEach(position => {
+            groupedCandidates[position].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        });
+
         res.render('candidates', {
-            users: result.recordset,
+            groupedCandidates,
             searchValue: search,
             csrfToken: req.csrfToken()
         });

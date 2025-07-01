@@ -49,9 +49,9 @@
         </tr>
         <tr><th>Job Offer</th><td data-field="job_offer" data-type="boolean"><%= jobs[0].job_offer ? 'True' : 'False' %></td></tr>
         <tr><th>Candidate Decision</th><td  data-field="candidate_decision" data-type="boolean"><%= jobs[0].candidate_decision ? 'Accepted' : 'Declined' %></td></tr>
-        <tr><th>Refusal Reason</th><td contenteditable="true" data-field="refusal_reason" data-type="text"><%= jobs[0].refusal_reason %></td></tr>
+        <tr><th>Refusal Reason</th><td contenteditable="true" data-field="refusal_reason" data-type="text" class="wrap"><%= jobs[0].refusal_reason %></td></tr>
         <tr><th>Work Start Date</th><td data-field="work_start_date" data-type="date"><%= jobs[0].work_start_date?.toISOString().split('T')[0] || '' %></td></tr>
-        <tr><th>Comments</th><td contenteditable="true" data-field="comments" data-type="text"><%= jobs[0].comments %></td></tr>
+        <tr><th>Comments</th><td contenteditable="true" data-field="comments" data-type="text" class="wrap"><%= jobs[0].comments %></td></tr>
     </table>
 </body>
 </html>

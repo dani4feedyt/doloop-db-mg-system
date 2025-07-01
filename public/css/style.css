@@ -6,6 +6,7 @@ body {
 }
 
 
+
 ul.no-bullets {
   list-style-type: none;
   padding-left: 0;
@@ -28,8 +29,20 @@ table.editable-table td {
   text-overflow: ellipsis; 
 }
 
+table.editable-table td.wrap {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
 table.editable-table th {
   background-color: #f2f2f2;
+}
+
+span.summary-text {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 nav {
@@ -181,6 +194,19 @@ nav .navigation-buttons form {
   margin-bottom: 8px;
 }
 
+.occupation-box {
+  margin-bottom: 40px;
+  padding: 20px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  background-color: #fefefe;
+}
+
+.occupation-box h2 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
 .interactive-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -212,4 +238,14 @@ nav .navigation-buttons form {
 
 .interactive-card .links a:hover {
   text-decoration: underline;
+}
+
+.hired-badge {
+  background-color: #000000;
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  margin-left: 6px;
+  border-radius: 4px;
+  vertical-align: middle;
 }

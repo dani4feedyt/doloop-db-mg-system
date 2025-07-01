@@ -77,7 +77,7 @@
 
         <tr><th>Future Contact</th><td data-field="future_contact" data-type="boolean"><%= candidate.future_contact ? 'True' : 'False' %></td></tr>
         <tr><th>Contact Date</th><td contenteditable="true" data-field="contact_date" data-type="date"><%= candidate.contact_date ? candidate.contact_date.toISOString().split('T')[0] : '' %></td></tr>
-        <tr><th>Comments</th><td contenteditable="true" data-field="comments" data-type="text"><%= candidate.comments %></td></tr>
+        <tr><th>Comments</th><td contenteditable="true" data-field="comments" data-type="text" class="wrap"><%= candidate.comments %></td></tr>
     </table>
 
     

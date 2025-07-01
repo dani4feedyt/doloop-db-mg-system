@@ -27,18 +27,31 @@
         <button type="submit">Search</button>
     </form>
 
-    <div class="interactive-list">
-        <% users.forEach(user => { %>
-            <div class="interactive-card">
-                <p><strong><%= user.name %> <%= user.surname %></strong></p>
-                <p>Age: <%= user.age %></p>
-                <p>Location: <%= user.location %></p>
-                <div class="links">
-                    <a href="/bio/<%= user.u_id %>">Biography</a>| 
-                    <a href="/job/<%= user.u_id %>">Job Card</a>
-                </div>
+
+
+    <% Object.keys(groupedCandidates).forEach(job => { %>
+        <div class="occupation-box">
+            <h2><%= job %></h2>
+            <div class="interactive-list">
+                <% groupedCandidates[job].forEach(user => { %>
+                    <div class="interactive-card">
+                        <p><strong>
+                            <%= user.name %> <%= user.surname %>
+                            <% if (user.job_offer) { %>
+                                <span class="hired-badge">Hired</span>
+                            <% } %>
+                        </strong></p>
+                        <p>Interview: <%= user.interview_date ? user.interview_date.toISOString().split('T')[0] : 'Not specified' %></p>
+                        <p>Contact: <%= user.contact_date ? user.contact_date.toISOString().split('T')[0] : 'Not specified' %></p>
+                        <p>Status: <%= user.selection_status || 'Not specified' %></p>
+                        <div class="links">
+                            <a href="/bio/<%= user.u_id %>">Biography</a>| 
+                            <a href="/job/<%= user.u_id %>">Job Card</a>
+                        </div>
+                    </div>
+                <% }); %>
             </div>
-        <% }); %>
-    </div>
+        </div>
+    <% }) %>
 </body>
 </html>
