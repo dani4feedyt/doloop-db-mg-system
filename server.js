@@ -8,7 +8,7 @@ const session = require('express-session');
 const multer = require('multer');
 const upload = multer();
 const startCronJobs = require('./cronJobs');
-
+const mime = require('mime-types');
 
 const app = express();
 const PORT = 3000;
@@ -665,9 +665,9 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
 
 app.post('/bio/:id/upload-cv', requireDbLogin, upload.single('cv'), async (req, res) => {
     const userId = parseInt(req.params.id, 10);
-    const fileBuffer = req.file?.buffer;
+    const file = req.file;
 
-    if (!fileBuffer) {
+    if (!file || !file.buffer) {
         return res.status(400).send('No file uploaded.');
     }
 
@@ -676,12 +676,17 @@ app.post('/bio/:id/upload-cv', requireDbLogin, upload.single('cv'), async (req, 
 
         await pool.request()
             .input('id', sql.Int, userId)
-            .input('cv', sql.VarBinary(sql.MAX), fileBuffer)
+            .input('cv', sql.VarBinary(sql.MAX), file.buffer)
             .query(`
                 UPDATE candidate_card
                 SET cv = @cv
                 WHERE u_id = @id
             `);
+
+        req.session.uploadedCV = {
+            filename: file.originalname,
+            mimetype: file.mimetype
+        };
 
         res.sendStatus(200);
     } catch (err) {
@@ -699,11 +704,7 @@ app.get('/bio/:id/download-cv', requireDbLogin, async (req, res) => {
 
         const result = await pool.request()
             .input('id', sql.Int, userId)
-            .query(`
-                SELECT cv
-                FROM candidate_card
-                WHERE u_id = @id
-            `);
+            .query(`SELECT cv FROM candidate_card WHERE u_id = @id`);
 
         const cvBuffer = result.recordset[0]?.cv;
 
@@ -711,9 +712,21 @@ app.get('/bio/:id/download-cv', requireDbLogin, async (req, res) => {
             return res.status(404).send('CV not found.');
         }
 
-        res.setHeader('Content-Disposition', 'attachment; filename="cv.pdf"');
-        res.setHeader('Content-Type', 'application/pdf');
+        const fileTypeFromBuffer = await import('file-type').then(ft => ft.fileTypeFromBuffer);
+        const fileType = await fileTypeFromBuffer(cvBuffer);
+
+        let extension = 'bin';
+        let mimeType = 'application/octet-stream';
+
+        if (fileType) {
+            extension = fileType.ext;
+            mimeType = fileType.mime;
+        }
+
+        res.setHeader('Content-Disposition', `attachment; filename="cv.${extension}"`);
+        res.setHeader('Content-Type', mimeType);
         res.send(cvBuffer);
+
     } catch (err) {
         console.error('CV download error:', err);
         res.status(500).send('Database error during download.');

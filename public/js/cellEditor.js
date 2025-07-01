@@ -228,91 +228,85 @@ export function attachCellEditors(csrfToken) {
                 input.addEventListener('change', save);
             });
 
-       }  else if (type === 'file') {
+       } else if (type === 'file') {
             cell.addEventListener('click', () => {
-            if (cell.querySelector('input[type="file"]')) return;
+                if (cell.querySelector('input[type="file"]')) return;
 
-            const hasCV = cell.dataset.cvExists === 'true';
-            const originalHTML = cell.innerHTML;
-            cell.innerHTML = '';
+                const hasCV = cell.dataset.cvExists === 'true';
+                const originalHTML = cell.innerHTML;
+                cell.innerHTML = '';
 
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'application/pdf';
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.pdf,.doc,.docx,.png,.jpg,.jpeg,.txt'; 
 
-            const uploadButton = document.createElement('button');
-            uploadButton.textContent = 'Upload';
-            uploadButton.style.marginLeft = '8px';
+                const uploadButton = document.createElement('button');
+                uploadButton.textContent = 'Upload';
+                uploadButton.style.marginLeft = '8px';
 
-            cell.appendChild(input);
-            cell.appendChild(uploadButton);
+                cell.appendChild(input);
+                cell.appendChild(uploadButton);
 
-            if (hasCV) {
-                const downloadBtn = document.createElement('button');
-                downloadBtn.textContent = 'Download';
-                downloadBtn.style.marginLeft = '8px';
-                downloadBtn.addEventListener('click', () => {
-                    window.open(`/${resource}/${userId}/download-cv`, '_blank');
-                });
+                if (hasCV) {
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.textContent = 'Download';
+                    downloadBtn.style.marginLeft = '8px';
+                    downloadBtn.addEventListener('click', () => {
+                        window.open(`/${resource}/${userId}/download-cv`, '_blank');
+                    });
 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'Delete';
-                deleteBtn.style.marginLeft = '8px';
-                deleteBtn.addEventListener('click', async () => {
-                    const confirmed = confirm('Are you sure you want to delete the CV?');
-                    if (!confirmed) return;
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.style.marginLeft = '8px';
+                    deleteBtn.addEventListener('click', async () => {
+                        if (!confirm('Are you sure you want to delete the CV?')) return;
+
+                        try {
+                            const res = await fetch(`/${resource}/${userId}/delete-cv`, {
+                                method: 'DELETE',
+                                headers: { 'CSRF-Token': csrfToken }
+                            });
+
+                            if (!res.ok) throw new Error(await res.text());
+
+                            alert('CV deleted.');
+                            cell.dataset.cvExists = 'false';
+                            cell.innerHTML = 'Add CV';
+                        } catch (err) {
+                            alert('Failed to delete CV: ' + err.message);
+                            cell.innerHTML = originalHTML;
+                        }
+                    });
+
+                    cell.appendChild(downloadBtn);
+                    cell.appendChild(deleteBtn);
+                }
+
+                uploadButton.addEventListener('click', async () => {
+                    const file = input.files[0];
+                    if (!file) return alert('No file selected.');
+
+                    const formData = new FormData();
+                    formData.append('cv', file);
 
                     try {
-                        const res = await fetch(`/${resource}/${userId}/delete-cv`, {
-                            method: 'DELETE',
-                            headers: {
-                                'CSRF-Token': csrfToken
-                            }
+                        const res = await fetch(`/${resource}/${userId}/upload-cv`, {
+                            method: 'POST',
+                            headers: { 'CSRF-Token': csrfToken },
+                            body: formData
                         });
 
                         if (!res.ok) throw new Error(await res.text());
 
-                        alert('CV deleted.');
-                        cell.dataset.cvExists = 'false';
-                        cell.innerHTML = 'Add CV';
+                        alert('File uploaded.');
+                        cell.dataset.cvExists = 'true';
+                        cell.innerHTML = 'Uploaded, click to change or download';
                     } catch (err) {
-                        alert('Failed to delete CV: ' + err.message);
+                        alert('Upload failed: ' + err.message);
                         cell.innerHTML = originalHTML;
                     }
                 });
-
-                cell.appendChild(downloadBtn);
-                cell.appendChild(deleteBtn);
-            }
-
-            uploadButton.addEventListener('click', async () => {
-                const file = input.files[0];
-                if (!file) return alert('No file selected.');
-                if (file.type !== 'application/pdf') return alert('Only PDFs allowed.');
-
-                const formData = new FormData();
-                formData.append('cv', file);
-
-                try {
-                    const res = await fetch(`/${resource}/${userId}/upload-cv`, {
-                        method: 'POST',
-                        headers: {
-                            'CSRF-Token': csrfToken
-                        },
-                        body: formData
-                    });
-
-                    if (!res.ok) throw new Error(await res.text());
-
-                    alert('CV uploaded.');
-                    cell.dataset.cvExists = 'true';
-                    cell.innerHTML = 'Uploaded, click to change or download';
-                } catch (err) {
-                    alert('Upload failed: ' + err.message);
-                    cell.innerHTML = originalHTML;
-                }
             });
-        });
 
 
         } else {
