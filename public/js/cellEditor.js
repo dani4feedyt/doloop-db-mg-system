@@ -1,4 +1,4 @@
-import { debounce } from './utils.js';
+import { refreshStatusHistory } from './job/selectionStatusUpdater.js';
 
 export function attachCellEditors(csrfToken) {
     const pathParts = window.location.pathname.split('/').filter(Boolean);
@@ -27,7 +27,12 @@ export function attachCellEditors(csrfToken) {
         const field = cell.dataset.field;
         const type = cell.dataset.type || 'text';
 
+        //Exceptions space
         if (!field) return;
+
+        
+        //Exceptions space
+
 
         const saveValue = async (value) => {
             try {
@@ -107,43 +112,73 @@ export function attachCellEditors(csrfToken) {
             };
 
             select.addEventListener('change', () => {
-                const value = select.value;
-                if (value === '__other__') {
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.placeholder = 'Enter custom value';
-                    cell.textContent = '';
-                    cell.appendChild(input);
-                    input.focus();
+            const value = select.value;
 
-                    const saveCustom = async () => {
-                        const customValue = input.value.trim();
-                        if (!customValue) {
-                            cell.textContent = currentValue;
-                            return;
-                        }
+            if (value === '__other__') {
+                // Replace select with input for custom value
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = 'Enter custom value';
+                cell.textContent = '';
+                cell.appendChild(input);
+                input.focus();
 
-                        await save(customValue);
-                    };
-
-                    input.addEventListener('blur', saveCustom);
-                    input.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            input.blur();
-                        }
-                    });
-                } else {
-                    save(value);
+                const saveCustom = async () => {
+                const customValue = input.value.trim();
+                if (!customValue) {
+                    cell.textContent = currentValue;
+                    return;
                 }
+                const success = await saveValue(customValue);
+                if (success) {
+                    cell.textContent = customValue;
+                    if (field === 'selection_status') {
+                        await refreshStatusHistory(userId);
+                    }
+                } else {
+                    cell.textContent = currentValue;
+                }
+                };
+
+                input.addEventListener('blur', saveCustom);
+                input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    input.blur();
+                }
+                });
+            } else {
+                
+                saveValue(value).then(success => {
+                if (success) {
+                    cell.textContent = value;
+                    if (field === 'selection_status') {
+                    refreshStatusHistory(userId);
+                    }
+                } else {
+                    cell.textContent = currentValue;
+                }
+                });
+            }
             });
 
+            
             select.addEventListener('blur', () => {
-                if (select.value !== '__other__') {
-                    save(select.value);
+            if (select.value !== '__other__') {
+                saveValue(select.value).then(success => {
+                if (success) {
+                    cell.textContent = select.value;
+                    if (field === 'selection_status') {
+                    refreshStatusHistory(userId);
+                    }
+                } else {
+                    cell.textContent = currentValue;
                 }
+                });
+            }
             });
         });
+    
 
         } if (type === 'boolean') {
             cell.addEventListener('click', () => {

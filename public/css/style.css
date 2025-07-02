@@ -199,7 +199,7 @@ nav .navigation-buttons form {
   padding: 20px;
   border: 2px solid #ddd;
   border-radius: 10px;
-  background-color: #fefefe;
+  background-color: #f2f2f2;
 }
 
 .occupation-box h2 {
@@ -248,4 +248,57 @@ nav .navigation-buttons form {
   margin-left: 6px;
   border-radius: 4px;
   vertical-align: middle;
+}
+
+ #statusHistoryWrapper {
+  position: relative;
+  outline: none;
+  cursor: pointer;
+  height: auto;
+  transition: height 0.3s ease;
+}
+
+#statusHistoryWrapper.collapsed {
+  height: 40px;
+  overflow: hidden;
+}
+
+#statusHistoryWrapper.collapsed::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), #f9f9f9);
+}
+
+#statusHistoryWrapper.expanded::after {
+  display: none;
+}
+
+#statusHistoryList.collapsed {
+  max-height: 40px;
+  overflow: hidden;
+}
+
+#collapsedMessage {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  font-style: italic;
+  font-size: 0.85em;
+  color: #666;
+  display: none;
+  pointer-events: none;
+  user-select: none;
+}
+
+#collapsedMessage.visible {
+  display: block;
+}
+
+#add-status-entry.hidden {
+  display: none;
 }

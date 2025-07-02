@@ -502,6 +502,7 @@ app.post('/bio/:id/delete', requireDbLogin, async (req, res) => {
         await pool.request().input('u_id', sql.Int, userId).query('DELETE FROM selection_card WHERE u_id = @u_id');
 
         await pool.request().input('u_id', sql.Int, userId).query('DELETE FROM candidate_card WHERE u_id = @u_id');
+        await pool.request().input('u_id', sql.Int, userId).query('DELETE FROM status_history WHERE u_id = @u_id');
 
         res.status(200).send({ message: 'Deleted successfully' });
     } catch (err) {
@@ -531,6 +532,13 @@ app.get('/job/:id', requireDbLogin, async (req, res) => {
             WHERE s.u_id = ${userId}
         `);
 
+        const historyResult = await sql.query(`
+            SELECT status, changed_at
+            FROM status_history
+            WHERE u_id = ${userId}
+            ORDER BY changed_at
+        `);
+
         if (result.recordset.length === 0) {
             return res.status(404).send('No job selection data found for this user.');
         }
@@ -548,6 +556,7 @@ app.get('/job/:id', requireDbLogin, async (req, res) => {
         res.render('job', {
             person: personInfo,
             jobs,
+            statusHistory: historyResult.recordset,
             csrfToken: req.csrfToken()
         });
 
@@ -614,13 +623,22 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
 
             const oldStatus = oldStatusResult.recordset[0].selection_status;
             const pos_id = oldStatusResult.recordset[0].pos_id;
-
             const newStatus = value;
+
+            if (oldStatus === newStatus) {
+                return res.status(200).send('No status change');
+            }
 
             await pool.request()
                 .input('value', sql.VarChar, newStatus)
                 .input('id', sql.Int, userId)
                 .query(`UPDATE selection_card SET selection_status = @value WHERE u_id = @id`);
+
+            await pool.request()
+                .input('u_id', sql.Int, userId)
+                .input('status', sql.VarChar, newStatus)
+                .input('changed_at', sql.DateTime, new Date())
+                .query(`INSERT INTO status_history (u_id, status, changed_at) VALUES (@u_id, @status, @changed_at)`);
 
             if (oldStatus !== 'Accepted' && newStatus === 'Accepted') {
                 const posCheck = await pool.request()
@@ -659,6 +677,60 @@ app.post('/job/:id/update-field', requireDbLogin, async (req, res) => {
     } catch (err) {
         console.error('DB error:', err);
         res.status(500).send('Database update error');
+    }
+});
+
+
+app.post('/job/:id/update-status-history', requireDbLogin, async (req, res) => {
+    const userId = parseInt(req.params.id, 10);
+    const history = req.body.history;
+
+    if (!Array.isArray(history)) {
+        return res.status(400).send('Invalid history data');
+    }
+
+    try {
+        const pool = await sql.connect(req.session.dbConfig);
+
+        // Clear existing history
+        await pool.request()
+            .input('userId', sql.Int, userId)
+            .query('DELETE FROM status_history WHERE u_id = @userId');
+
+        // Insert new history entries
+        for (const entry of history) {
+            if (!entry.status || !entry.changed_at) continue;
+
+            await pool.request()
+                .input('userId', sql.Int, userId)
+                .input('status', sql.VarChar(sql.MAX), entry.status)
+                .input('changed_at', sql.DateTime, new Date(entry.changed_at))
+                .query(`
+                    INSERT INTO status_history (u_id, status, changed_at)
+                    VALUES (@userId, @status, @changed_at)
+                `);
+        }
+
+        res.sendStatus(200);
+    } catch (err) {
+        console.error('Status history update error:', err);
+        res.status(500).send('Failed to update status history');
+    }
+});
+
+app.get('/job/:id/status-history-json', requireDbLogin, async (req, res) => {
+    const userId = parseInt(req.params.id, 10);
+    try {
+        const pool = await sql.connect(req.session.dbConfig);
+
+        const result = await pool.request()
+        .input('userId', sql.Int, userId)
+        .query('SELECT status, changed_at FROM status_history WHERE u_id = @userId ORDER BY changed_at DESC');
+
+        res.json(result.recordset);
+    } catch (err) {
+        console.error('Failed to get status history:', err);
+        res.status(500).send('Failed to load status history');
     }
 });
 

@@ -21,7 +21,7 @@
             </div>
         </h1>
     </nav>
-    <table border="1" cellpadding="10" cellspacing="0" class="editable-table", id="jobTable">
+    <table border="1" cellpadding="10" cellspacing="0" class="editable-table", id="jobTable" data-userid="<%= person.u_id %>">
         <tr><th>Name</th><td contenteditable="true" data-field="name" data-type="text"><%= person.name %></td></tr>
         <tr><th>Surname</th><td contenteditable="true" data-field="surname" data-type="text"><%= person.surname %></td></tr>
         <tr><th>Age</th><td contenteditable="true" data-field="age" data-type="number"><%= person.age %></td></tr>
@@ -52,6 +52,22 @@
         <tr><th>Refusal Reason</th><td contenteditable="true" data-field="refusal_reason" data-type="text" class="wrap"><%= jobs[0].refusal_reason %></td></tr>
         <tr><th>Work Start Date</th><td data-field="work_start_date" data-type="date"><%= jobs[0].work_start_date?.toISOString().split('T')[0] || '' %></td></tr>
         <tr><th>Comments</th><td contenteditable="true" data-field="comments" data-type="text" class="wrap"><%= jobs[0].comments %></td></tr>
+        <tr>
+        <th>Status History</th>
+            <td data-field="status_history" data-type="list" class="custom">
+                <div id="statusHistoryWrapper">
+                <ul id="statusHistoryList" class="no-bullets">
+                    <% statusHistory.forEach(entry => { %>
+                    <li class="status-history-item" data-status="<%= entry.status %>" data-date="<%= entry.changed_at.toISOString().split('T')[0] %>">
+                        <span><%= entry.status %> → <%= entry.changed_at.toISOString().split('T')[0] %></span>
+                    </li>
+                    <% }) %>
+                </ul>
+                <div id="collapsedMessage"></div>
+                <button type="button" id="add-status-entry">Add Status Entry</button>
+                </div>
+            </td>
+        </tr>
     </table>
 </body>
 </html>
