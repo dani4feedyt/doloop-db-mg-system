@@ -1,12 +1,13 @@
 //import { initNavigation } from '../navigation.js';
-import { attachCellEditors } from '../cellEditor.js';
+//import { attachCellEditors } from '../cellEditor.js';
+import { initViewToggle } from '../utils.js';
 
 
 document.addEventListener("DOMContentLoaded", () => {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    const newPosId = document.getElementById("posTable")?.dataset.posid;
-    //initNavigation(csrfToken, newPosId);
-    attachCellEditors(csrfToken, newPosId);
+    //initNavigation(csrfToken, userId);
+    //attachCellEditors(csrfToken, userId);
+    initViewToggle(csrfToken);
     document.getElementById("home")?.addEventListener("click", () => {
         window.location.href = '/';
     });

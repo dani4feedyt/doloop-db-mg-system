@@ -3,7 +3,7 @@
 <head>
     <link rel="stylesheet" href="/css/style.css">
     <meta name="csrf-token" content="<%= csrfToken %>">
-    <script type="module" src="/js/bio/bio.js" defer></script>
+    <script type="module" src="/js/cand/candidates.js" defer></script>
     <title>All Candidates</title>
 </head>
 <body>
@@ -13,6 +13,11 @@
             <a href="/" class="btn-nav">↑</a>
             <button id="home">⌂</button>
             <a href="/bio/new" class="btn-nav">Add New Candidate</a>
+            <a class="nav-view">Toggle Table View</a>
+            <label class="switch">
+                <input type="checkbox" id="toggleView">
+                <span class="slider round"></span>
+            </label>
         </div>
         </h1>
     </nav>
@@ -27,31 +32,64 @@
         <button type="submit">Search</button>
     </form>
 
-
-
-    <% Object.keys(groupedCandidates).forEach(job => { %>
-        <div class="occupation-box">
-            <h2><%= job %></h2>
-            <div class="interactive-list">
-                <% groupedCandidates[job].forEach(user => { %>
-                    <div class="interactive-card">
-                        <p><strong>
-                            <%= user.name %> <%= user.surname %>
-                            <% if (user.job_offer) { %>
-                                <span class="hired-badge">Hired</span>
-                            <% } %>
-                        </strong></p>
-                        <p>Interview: <%= user.interview_date ? user.interview_date.toISOString().split('T')[0] : 'Not specified' %></p>
-                        <p>Contact: <%= user.contact_date ? user.contact_date.toISOString().split('T')[0] : 'Not specified' %></p>
-                        <p>Status: <%= user.selection_status || 'Not specified' %></p>
-                        <div class="links">
-                            <a href="/bio/<%= user.u_id %>">Biography</a>| 
-                            <a href="/job/<%= user.u_id %>">Job Card</a>
+    <div id="cardView" class="view-section">
+        <% Object.keys(groupedCandidates).forEach(job => { %>
+            <div class="occupation-box">
+                <h2><%= job %></h2>
+                <div class="interactive-list">
+                    <% groupedCandidates[job].forEach(user => { %>
+                        <div class="interactive-card">
+                            <p><strong>
+                                <%= user.name %> <%= user.surname %>
+                                <% if (user.job_offer) { %>
+                                    <span class="hired-badge">Hired</span>
+                                <% } %>
+                            </strong></p>
+                            <p>Interview: <%= user.interview_date ? user.interview_date.toISOString().split('T')[0] : 'Not specified' %></p>
+                            <p>Contact: <%= user.contact_date ? user.contact_date.toISOString().split('T')[0] : 'Not specified' %></p>
+                            <p>Status: <%= user.selection_status || 'Not specified' %></p>
+                            <div class="links">
+                                <a href="/bio/<%= user.u_id %>">Biography</a> |
+                                <a href="/job/<%= user.u_id %>">Job Card</a>
+                            </div>
                         </div>
-                    </div>
-                <% }); %>
+                    <% }); %>
+                </div>
             </div>
-        </div>
-    <% }) %>
+        <% }) %>
+    </div>
+
+    <div id="tableView" class="view-section view-hidden">
+        <% Object.keys(groupedCandidates).forEach(position => { %>
+            <h2><%= position %></h2>
+            <table class="editable-table">
+            <thead>
+                <tr>
+                <th>Name</th>
+                <th>Surname</th>
+                <th>Interview</th>
+                <th>Contact</th>
+                <th>Status</th>
+                <th>Cards</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% groupedCandidates[position].forEach(user => { %>
+                <tr>
+                    <td><%= user.name %></td>
+                    <td><%= user.surname %></td>
+                    <td><%= user.interview_date ? user.interview_date.toISOString().split('T')[0] : '–' %></td>
+                    <td><%= user.contact_date ? user.contact_date.toISOString().split('T')[0] : '–' %></td>
+                    <td><%= user.selection_status || '–' %></td>
+                    <td>
+                    <a href="/bio/<%= user.u_id %>">Biography</a> |
+                    <a href="/job/<%= user.u_id %>">Job Card</a>
+                    </td>
+                </tr>
+                <% }); %>
+            </tbody>
+            </table>
+        <% }); %>
+    </div>
 </body>
 </html>

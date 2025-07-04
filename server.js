@@ -8,7 +8,6 @@ const session = require('express-session');
 const multer = require('multer');
 const upload = multer();
 const startCronJobs = require('./cronJobs');
-const mime = require('mime-types');
 
 const app = express();
 const PORT = 3000;

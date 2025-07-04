@@ -124,6 +124,10 @@ nav .navigation-buttons form {
   background-color: #353535;
 }
 
+.navigation-buttons a.nav-view{
+  font-size: 1rem;
+}
+
 .navigation-buttons a.btn-nav {
   font-weight: normal;
 }
@@ -248,6 +252,71 @@ nav .navigation-buttons form {
   margin-left: 6px;
   border-radius: 4px;
   vertical-align: middle;
+}
+
+.view-hidden {
+  display: none !important;
+}
+
+.switch {
+  margin-top: 7px;
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+  vertical-align: middle;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #000;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+
+.candidates-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.candidates-table th,
+.candidates-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
 }
 
  #statusHistoryWrapper {
