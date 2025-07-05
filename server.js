@@ -825,51 +825,64 @@ app.delete('/bio/:id/delete-cv', requireDbLogin, async (req, res) => {
     }
 });
 
+
 app.get('/candidates', requireDbLogin, async (req, res) => {
     try {
         const search = req.query.search || '';
+        const selectedCity = req.query.city || '';
+        const selectedGender = req.query.gender || '';
+        const minExp = parseInt(req.query.minExp, 10) || 0;
 
+        const pool = await sql.connect(req.session.dbConfig);
+
+        // Main candidate query (adjust filters here as needed)
         const query = `
             SELECT 
-                c.u_id, c.name, c.surname,
-                c.contact_date,
+                c.u_id, c.name, c.surname, c.location, c.gender, c.contact_date,
                 s.interview_date, s.selection_status, s.job_offer,
-                p.position_name,
-                c.created_at
+                p.position_name
             FROM candidate_card c
             LEFT JOIN selection_card s ON c.u_id = s.u_id
             LEFT JOIN s_positions p ON s.pos_id = p.pos_id
-            WHERE 
-                c.name LIKE @search OR 
-                c.surname LIKE @search OR 
-                p.position_name LIKE @search
+            WHERE
+                (c.name LIKE @search OR c.surname LIKE @search OR p.position_name LIKE @search)
+                AND (@city = '' OR c.location = @city)
+                AND (@gender = '' OR c.gender = @gender)
         `;
 
-        const pool = await sql.connect(req.session.dbConfig);
-        const result = await pool.request()
-            .input('search', sql.VarChar, `%${search}%`)
-            .query(query);
+        const request = pool.request();
+        request.input('search', sql.VarChar, `%${search}%`);
+        request.input('city', sql.VarChar, selectedCity);
+        request.input('gender', sql.VarChar, selectedGender);
 
+        const result = await request.query(query);
+
+        // Grouping
         const groupedCandidates = {};
-
         result.recordset.forEach(user => {
             const position = user.position_name || 'Unassigned';
-            if (!groupedCandidates[position]) {
-                groupedCandidates[position] = [];
-            }
+            if (!groupedCandidates[position]) groupedCandidates[position] = [];
             groupedCandidates[position].push(user);
         });
 
-        Object.keys(groupedCandidates).forEach(position => {
-            groupedCandidates[position].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        });
+        // Extract unique city list
+        const cityResult = await pool.request().query(`
+            SELECT DISTINCT location FROM candidate_card WHERE location IS NOT NULL AND location != ''
+        `);
+        const cities = (cityResult.recordset || []).map(row => row.location);
+        
+
+        
 
         res.render('candidates', {
             groupedCandidates,
             searchValue: search,
+            selectedCity,
+            selectedGender,
+            minExp,
+            cities,
             csrfToken: req.csrfToken()
         });
-
     } catch (err) {
         console.error(err);
         res.status(500).send('Error fetching candidates');

@@ -1,6 +1,7 @@
 //import { initNavigation } from '../navigation.js';
 //import { attachCellEditors } from '../cellEditor.js';
 import { initViewToggle } from '../utils.js';
+import { initFilter } from '../utils.js';
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -8,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     //initNavigation(csrfToken, userId);
     //attachCellEditors(csrfToken, userId);
     initViewToggle(csrfToken);
+    initFilter();
     document.getElementById("home")?.addEventListener("click", () => {
         window.location.href = '/';
     });

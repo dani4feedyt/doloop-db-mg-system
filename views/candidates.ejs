@@ -22,15 +22,48 @@
         </h1>
     </nav>
 
-    <form method="GET" action="/candidates" class="search-form">
-        <input 
-            type="text" 
-            name="search" 
-            placeholder="Search candidates" 
-            value="<%= searchValue %>" 
-        />
-        <button type="submit">Search</button>
-    </form>
+    
+
+    <div class="filter-controls">
+  <button id="openFilter">🔍 Filter</button>
+</div>
+
+    <div id="filterModal" class="modal hidden">
+        <form id="filterForm" method="GET" action="/candidates">
+            <h3>Filter Candidates</h3>
+
+            <label>Search:
+            <input type="text" name="search" value="<%= searchValue %>" />
+            </label>
+
+            <label>City:
+            <select name="city" data-field="cities">
+                <option value="">All</option>
+                <% cities.forEach(city => { %>
+                <option value="<%= city %>" <%= city === selectedCity ? 'selected' : '' %>><%= city %></option>
+                <% }); %>
+            </select>
+            </label>
+
+            <label>Gender:
+            <select name="gender">
+                <option value="">All</option>
+                <option value="Male" <%= selectedGender === 'Male' ? 'selected' : '' %>>Male</option>
+                <option value="Female" <%= selectedGender === 'Female' ? 'selected' : '' %>>Female</option>
+            </select>
+            </label>
+
+            <label>Min Experience:
+            <input type="number" name="minExp" value="<%= minExp || '' %>" />
+            </label>
+
+            <div class="modal-actions">
+            <button type="submit">Apply</button>
+            <button type="button" id="closeFilter">Cancel</button>
+            </div>
+        </form>
+    </div>
+
 
     <div id="cardView" class="view-section">
         <% Object.keys(groupedCandidates).forEach(job => { %>
