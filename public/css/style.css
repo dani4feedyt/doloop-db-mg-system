@@ -137,17 +137,6 @@ nav {
   margin: 0;
 }
 
-/* .navigation-buttons button {
-  font-size: 1rem;
-  padding: 0px 2px;
-  cursor: pointer;
-}
-
-.navigation-buttons button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-} */
-
 nav .navigation-buttons form {
     display: inline-block;
     margin: 0;
@@ -170,56 +159,11 @@ nav .navigation-buttons form {
   color: #222;
 }
 
-/* .navigation-buttons button {
-  font-size: 0.85rem;
-  padding: 4px 10px;
-  cursor: pointer;
-  background-color: #000000;
-  border: none;
-  color: white;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
-  margin-bottom: 10px;
-} */
-
-/* .navigation-buttons button:hover {
-  background-color: #353535;
-} */
 
 .navigation-buttons a.nav-view{
   font-size: 1rem;
 }
 
-/* .navigation-buttons a.btn-nav {
-  font-weight: normal;
-} */
-
-/* .search-form {
-  margin-bottom: 20px;
-}
-
-.search-form input {
-  padding: 8px;
-  font-size: 1rem;
-  width: 250px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.search-form button {
-  font-size: 0.85rem;
-  padding: 4px 10px;
-  margin-left: 8px;
-  cursor: pointer;
-  background-color: #000000;
-  border: none;
-  color: white;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
-}
-.search-form button:hover {
-  background-color: #353535;
-} */
 
 .login-form {
   display: flex;
@@ -247,19 +191,6 @@ nav .navigation-buttons form {
   flex-direction: column;
 }
 
-/* .login-form button {
-  height: 36px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  background-color: #000000;
-  border: none;
-  color: white;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
-}
-
-
-} */
 
 .login-form label {
   margin-bottom: 8px;

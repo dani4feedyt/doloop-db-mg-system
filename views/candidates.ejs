@@ -23,8 +23,15 @@
     </nav>
 
     
+    
+        <button id="filterBtn" class="btn-nav">Filter</button>
 
-    <button id="filterBtn" class="btn-nav">Filter</button>
+        <% if (recordCount > 0) { %>
+            <a><strong>&nbsp<%= recordCount %></strong> record<%= recordCount === 1 ? '' : 's' %> found.</a>
+        <% } else { %>
+            <a><em>&nbspNo records were found with such filters.</em></a>
+        <% } %>
+    
 
     <div id="filterModal" class="modal hidden">
         <div class="modal-content">

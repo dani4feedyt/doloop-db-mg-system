@@ -924,8 +924,11 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
             groupedCandidates[key].push(c);
         });
 
+        const recordCount = candidateData.recordset.length;
+
         res.render('candidates', {
             groupedCandidates,
+            recordCount,
             searchValue: req.query,
             filterOptions: {
                 names: nameOptions.recordset.map(r => r.name),

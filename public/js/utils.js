@@ -32,7 +32,6 @@ export function initViewToggle() {
 export function initFilterPopup(onSubmitCallback) {
     const modal = document.getElementById('filterModal');
     const openBtn = document.getElementById('filterBtn');
-    const cancelBtn = document.getElementById('cancelFilter');
     const clearBtn = document.getElementById('clearFilters');
     const form = document.getElementById('filterForm');
 
