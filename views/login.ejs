@@ -12,17 +12,17 @@
     </nav>
 
     <form action="/login" method="post" class="login-form">
-        <div class="form-row">
-            <label for="user">DB User:</label>
-            <input type="text" name="user" required>
+        <div class="input-fields">
+            <div class="form-row">
+                <label for="user">DB User:</label>
+                <input type="text" name="user" required>
+            </div>
+            <div class="form-row">
+                <label for="password">DB Password:</label>
+                <input type="password" name="password" required>
+            </div>
         </div>
-        <div class="form-row">
-            <label for="password">DB Password:</label>
-            <input type="password" name="password" required>
-        </div>
-        <div class="form-row">
-            <button type="submit">Login</button>
-        </div>
+        <button type="submit" class="btn-strong">Login</button>
     </form>
 
 </body>
