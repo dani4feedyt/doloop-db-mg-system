@@ -42,36 +42,44 @@
 
             <label>Name:</label>
             <div class="scrollable-options small-scroll">
-                <% filterOptions.names.forEach(n => { %>
+                <% filterOptions.names.forEach(n => { 
+                    const displayValue = n === '' ? 'None' : n; 
+                %>
                     <label><input type="checkbox" name="name" value="<%= n %>" 
-                    <%= (Array.isArray(searchValue.name) ? searchValue.name.includes(n) : searchValue.name === n) ? 'checked' : '' %>> <%= n %>
+                    <%= (Array.isArray(searchValue.name) ? searchValue.name.includes(n) : searchValue.name === n) ? 'checked' : '' %>> <%= displayValue %>
                     </label>
                 <% }) %>
             </div>
 
             <label>Location:</label>
             <div class="scrollable-options small-scroll">
-                <% filterOptions.locations.forEach(l => { %>
+                <% filterOptions.locations.forEach(l => { 
+                    const displayValue = l === '' ? 'None' : l; 
+                %>
                     <label><input type="checkbox" name="location" value="<%= l %>" 
-                    <%= (Array.isArray(searchValue.location) ? searchValue.location.includes(l) : searchValue.location === l) ? 'checked' : '' %>> <%= l %>
+                        <%= (Array.isArray(searchValue.location) ? searchValue.location.includes(l) : searchValue.location === l) ? 'checked' : '' %>> <%= displayValue %>
                     </label>
                 <% }) %>
             </div>
 
             <label>Position:</label>
             <div class="scrollable-options small-scroll">
-                <% filterOptions.positions.forEach(p => { %>
-                <label><input type="checkbox" name="position" value="<%= p %>" 
-                    <%= (Array.isArray(searchValue.position) ? searchValue.position.includes(p) : searchValue.position === p) ? 'checked' : '' %>> <%= p %>
+                <% filterOptions.positions.forEach(p => { 
+                    const displayValue = p === '' ? 'None' : p;     
+                %>
+                    <label><input type="checkbox" name="position" value="<%= p %>" 
+                        <%= (Array.isArray(searchValue.position) ? searchValue.position.includes(p) : searchValue.position === p) ? 'checked' : '' %>> <%= displayValue %>
                     </label>
                 <% }) %>
             </div>
 
             <label>Status:</label>
             <div class="scrollable-options small-scroll">
-                <% filterOptions.statuses.forEach(s => { %>
-                <label><input type="checkbox" name="status" value="<%= s %>" 
-                    <%= (Array.isArray(searchValue.status) ? searchValue.status.includes(s) : searchValue.status === s) ? 'checked' : '' %>> <%= s %>
+                <% filterOptions.statuses.forEach(s => { 
+                    const displayValue = s === '' ? 'None' : s; 
+                %>
+                    <label><input type="checkbox" name="status" value="<%= s %>" 
+                        <%= (Array.isArray(searchValue.status) ? searchValue.status.includes(s) : searchValue.status === s) ? 'checked' : '' %>> <%= displayValue %>
                     </label>
                 <% }) %>
             </div>

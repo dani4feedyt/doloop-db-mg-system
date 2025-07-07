@@ -71,6 +71,14 @@ body {
   font-weight: normal;
 }
 
+.btn-strong:hover {
+  background-color: #353535;
+}
+
+input[type="checkbox"] {
+    accent-color: #000000;   
+}
+
 ul.no-bullets {
   list-style-type: none;
   padding-left: 0;
@@ -250,8 +258,7 @@ nav .navigation-buttons form {
   transition: background-color 0.3s ease;
 }
 
-.login-form button:hover {
-  background-color: #353535;
+
 } */
 
 .login-form label {
