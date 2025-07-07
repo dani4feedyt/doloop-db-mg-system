@@ -24,46 +24,41 @@
 
     
 
-    <div class="filter-controls">
-  <button id="openFilter">🔍 Filter</button>
+    <button id="filterBtn" class="btn-nav">Filter</button>
+
+<!-- Filter Modal -->
+<div id="filterModal" class="modal hidden">
+  <div class="modal-content">
+    <h2>Apply Filters</h2>
+    <form id="filterForm">
+      <label>
+        Name:
+        <input type="text" name="name" />
+      </label>
+      <label>
+        Location:
+        <input type="text" name="location" />
+      </label>
+      <label>
+        Position:
+        <input type="text" name="position" />
+      </label>
+      <label>
+        Selection Status:
+        <input type="text" name="status" />
+      </label>
+      <label>
+        Hired Only:
+        <input type="checkbox" name="hired" />
+      </label>
+
+      <div class="modal-actions">
+        <button type="submit">Apply</button>
+        <button type="button" id="cancelFilter">Cancel</button>
+      </div>
+    </form>
+  </div>
 </div>
-
-    <div id="filterModal" class="modal hidden">
-        <form id="filterForm" method="GET" action="/candidates">
-            <h3>Filter Candidates</h3>
-
-            <label>Search:
-            <input type="text" name="search" value="<%= searchValue %>" />
-            </label>
-
-            <label>City:
-            <select name="city" data-field="cities">
-                <option value="">All</option>
-                <% cities.forEach(city => { %>
-                <option value="<%= city %>" <%= city === selectedCity ? 'selected' : '' %>><%= city %></option>
-                <% }); %>
-            </select>
-            </label>
-
-            <label>Gender:
-            <select name="gender">
-                <option value="">All</option>
-                <option value="Male" <%= selectedGender === 'Male' ? 'selected' : '' %>>Male</option>
-                <option value="Female" <%= selectedGender === 'Female' ? 'selected' : '' %>>Female</option>
-            </select>
-            </label>
-
-            <label>Min Experience:
-            <input type="number" name="minExp" value="<%= minExp || '' %>" />
-            </label>
-
-            <div class="modal-actions">
-            <button type="submit">Apply</button>
-            <button type="button" id="closeFilter">Cancel</button>
-            </div>
-        </form>
-    </div>
-
 
     <div id="cardView" class="view-section">
         <% Object.keys(groupedCandidates).forEach(job => { %>

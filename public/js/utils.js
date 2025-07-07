@@ -29,36 +29,25 @@ export function initViewToggle() {
     });
 }
 
-export function initFilter() {
-    const openBtn = document.getElementById('openFilter');
-    const closeBtn = document.getElementById('closeFilter');
-    const modal = document.getElementById('filterModal');
+export function initFilterPopup(onSubmitCallback) {
+  const modal = document.getElementById('filterModal');
+  const openBtn = document.getElementById('filterBtn');
+  const cancelBtn = document.getElementById('cancelFilter');
+  const form = document.getElementById('filterForm');
 
-    openBtn?.addEventListener('click', () => modal.classList.remove('hidden'));
-    closeBtn?.addEventListener('click', () => modal.classList.add('hidden'));
+  openBtn.addEventListener('click', () => modal.classList.remove('hidden'));
+  cancelBtn.addEventListener('click', () => modal.classList.add('hidden'));
 
-    const form = document.getElementById('filterForm');
-    if (!form) return;
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
 
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const formData = new FormData(form);
-        const search = formData.get('search').toLowerCase();
-        const city = formData.get('city');
-        const gender = formData.get('gender');
-
-        document.querySelectorAll('.interactive-card').forEach(card => {
-        const name = card.textContent.toLowerCase();
-        const cardCity = card.getAttribute('data-location') || '';
-        const cardGender = card.getAttribute('data-gender') || '';
-
-        const matchSearch = name.includes(search);
-        const matchCity = !city || cardCity === city;
-        const matchGender = !gender || cardGender === gender;
-
-        card.style.display = (matchSearch && matchCity && matchGender) ? '' : 'none';
-        });
-
-        modal.classList.add('hidden');
+    const formData = new FormData(form);
+    const filters = {};
+    formData.forEach((value, key) => {
+      if (value) filters[key] = value;
     });
+
+    modal.classList.add('hidden');
+    if (onSubmitCallback) onSubmitCallback(filters);
+  });
 }

@@ -828,64 +828,68 @@ app.delete('/bio/:id/delete-cv', requireDbLogin, async (req, res) => {
 
 app.get('/candidates', requireDbLogin, async (req, res) => {
     try {
-        const search = req.query.search || '';
-        const selectedCity = req.query.city || '';
-        const selectedGender = req.query.gender || '';
-        const minExp = parseInt(req.query.minExp, 10) || 0;
+        const {
+            name = '',
+            location = '',
+            position = '',
+            status = '',
+            hired = ''
+        } = req.query;
 
         const pool = await sql.connect(req.session.dbConfig);
 
-        // Main candidate query (adjust filters here as needed)
         const query = `
             SELECT 
-                c.u_id, c.name, c.surname, c.location, c.gender, c.contact_date,
-                s.interview_date, s.selection_status, s.job_offer,
+                c.u_id,
+                c.name,
+                c.surname,
+                c.contact_date,
+                s.interview_date,
+                s.selection_status,
+                s.job_offer,
                 p.position_name
             FROM candidate_card c
             LEFT JOIN selection_card s ON c.u_id = s.u_id
             LEFT JOIN s_positions p ON s.pos_id = p.pos_id
             WHERE
-                (c.name LIKE @search OR c.surname LIKE @search OR p.position_name LIKE @search)
-                AND (@city = '' OR c.location = @city)
-                AND (@gender = '' OR c.gender = @gender)
+                c.name LIKE @name AND
+                c.location LIKE @location AND
+                ISNULL(p.position_name, '') LIKE @position AND
+                ISNULL(s.selection_status, '') LIKE @status AND
+                (
+                    @hired = '' OR 
+                    (@hired = 'true' AND s.job_offer = 1)
+                )
+            ORDER BY c.u_id DESC
         `;
 
-        const request = pool.request();
-        request.input('search', sql.VarChar, `%${search}%`);
-        request.input('city', sql.VarChar, selectedCity);
-        request.input('gender', sql.VarChar, selectedGender);
+        const result = await pool.request()
+            .input('name', sql.VarChar, `%${name}%`)
+            .input('location', sql.VarChar, `%${location}%`)
+            .input('position', sql.VarChar, `%${position}%`)
+            .input('status', sql.VarChar, `%${status}%`)
+            .input('hired', sql.VarChar, hired)
+            .query(query);
 
-        const result = await request.query(query);
-
-        // Grouping
         const groupedCandidates = {};
-        result.recordset.forEach(user => {
-            const position = user.position_name || 'Unassigned';
-            if (!groupedCandidates[position]) groupedCandidates[position] = [];
-            groupedCandidates[position].push(user);
+
+        result.recordset.forEach(candidate => {
+            const pos = candidate.position_name || 'Unassigned';
+            if (!groupedCandidates[pos]) {
+                groupedCandidates[pos] = [];
+            }
+            groupedCandidates[pos].push(candidate);
         });
-
-        // Extract unique city list
-        const cityResult = await pool.request().query(`
-            SELECT DISTINCT location FROM candidate_card WHERE location IS NOT NULL AND location != ''
-        `);
-        const cities = (cityResult.recordset || []).map(row => row.location);
-        
-
-        
 
         res.render('candidates', {
             groupedCandidates,
-            searchValue: search,
-            selectedCity,
-            selectedGender,
-            minExp,
-            cities,
+            searchValue: req.query,
             csrfToken: req.csrfToken()
         });
+
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Error fetching candidates');
+        console.error('Error fetching candidates:', err);
+        res.status(500).send('Failed to fetch candidates.');
     }
 });
 

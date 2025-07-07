@@ -1,7 +1,7 @@
 //import { initNavigation } from '../navigation.js';
 //import { attachCellEditors } from '../cellEditor.js';
 import { initViewToggle } from '../utils.js';
-import { initFilter } from '../utils.js';
+import { initFilterPopup } from '../utils.js';
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -9,7 +9,12 @@ document.addEventListener("DOMContentLoaded", () => {
     //initNavigation(csrfToken, userId);
     //attachCellEditors(csrfToken, userId);
     initViewToggle(csrfToken);
-    initFilter();
+    
+
+    initFilterPopup((filters) => {
+        const query = new URLSearchParams(filters).toString();
+        window.location.href = `/candidates?${query}`;
+        });
     document.getElementById("home")?.addEventListener("click", () => {
         window.location.href = '/';
     });
