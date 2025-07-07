@@ -26,39 +26,67 @@
 
     <button id="filterBtn" class="btn-nav">Filter</button>
 
-<!-- Filter Modal -->
-<div id="filterModal" class="modal hidden">
-  <div class="modal-content">
-    <h2>Apply Filters</h2>
-    <form id="filterForm">
-      <label>
-        Name:
-        <input type="text" name="name" />
-      </label>
-      <label>
-        Location:
-        <input type="text" name="location" />
-      </label>
-      <label>
-        Position:
-        <input type="text" name="position" />
-      </label>
-      <label>
-        Selection Status:
-        <input type="text" name="status" />
-      </label>
-      <label>
-        Hired Only:
-        <input type="checkbox" name="hired" />
-      </label>
+    <div id="filterModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Apply Filters</h2>
+            <form id="filterForm" method="GET" action="/candidates">
 
-      <div class="modal-actions">
-        <button type="submit">Apply</button>
-        <button type="button" id="cancelFilter">Cancel</button>
-      </div>
-    </form>
-  </div>
-</div>
+            <div class="form-row">
+                <label>Age from:
+                <input type="number" name="ageMin" min="0" value="<%= searchValue.ageMin || '' %>" />
+                </label>
+                <label>Age to:
+                <input type="number" name="ageMax" min="0" value="<%= searchValue.ageMax || '' %>" />
+                </label>
+            </div>
+
+            <label>Name:</label>
+            <div class="scrollable-options small-scroll">
+                <% filterOptions.names.forEach(n => { %>
+                    <label><input type="checkbox" name="name" value="<%= n %>" 
+                    <%= (Array.isArray(searchValue.name) ? searchValue.name.includes(n) : searchValue.name === n) ? 'checked' : '' %>> <%= n %>
+                    </label>
+                <% }) %>
+            </div>
+
+            <label>Location:</label>
+            <div class="scrollable-options small-scroll">
+                <% filterOptions.locations.forEach(l => { %>
+                    <label><input type="checkbox" name="location" value="<%= l %>" 
+                    <%= (Array.isArray(searchValue.location) ? searchValue.location.includes(l) : searchValue.location === l) ? 'checked' : '' %>> <%= l %>
+                    </label>
+                <% }) %>
+            </div>
+
+            <label>Position:</label>
+            <div class="scrollable-options small-scroll">
+                <% filterOptions.positions.forEach(p => { %>
+                <label><input type="checkbox" name="position" value="<%= p %>" 
+                    <%= (Array.isArray(searchValue.position) ? searchValue.position.includes(p) : searchValue.position === p) ? 'checked' : '' %>> <%= p %>
+                    </label>
+                <% }) %>
+            </div>
+
+            <label>Status:</label>
+            <div class="scrollable-options small-scroll">
+                <% filterOptions.statuses.forEach(s => { %>
+                <label><input type="checkbox" name="status" value="<%= s %>" 
+                    <%= (Array.isArray(searchValue.status) ? searchValue.status.includes(s) : searchValue.status === s) ? 'checked' : '' %>> <%= s %>
+                    </label>
+                <% }) %>
+            </div>
+
+            <label>
+                <input type="checkbox" name="hired" value="true" <%= searchValue.hired === 'true' ? 'checked' : '' %> />
+                Hired only
+            </label>
+
+            <div class="modal-actions">
+                <button type="button" id="clearFilters">Clear All</button>
+            </div>
+            </form>
+        </div>
+    </div>
 
     <div id="cardView" class="view-section">
         <% Object.keys(groupedCandidates).forEach(job => { %>

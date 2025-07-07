@@ -11,10 +11,9 @@ document.addEventListener("DOMContentLoaded", () => {
     initViewToggle(csrfToken);
     
 
-    initFilterPopup((filters) => {
-        const query = new URLSearchParams(filters).toString();
-        window.location.href = `/candidates?${query}`;
-        });
+    initFilterPopup((queryString) => {
+        window.location.href = `/candidates?${queryString}`;
+    });
     document.getElementById("home")?.addEventListener("click", () => {
         window.location.href = '/';
     });

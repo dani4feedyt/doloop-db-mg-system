@@ -55,7 +55,7 @@ app.use(session({
     }
 }));
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 
@@ -828,15 +828,62 @@ app.delete('/bio/:id/delete-cv', requireDbLogin, async (req, res) => {
 
 app.get('/candidates', requireDbLogin, async (req, res) => {
     try {
-        const {
-            name = '',
-            location = '',
-            position = '',
-            status = '',
-            hired = ''
-        } = req.query;
+        // value normalisation
+        const toArray = val => Array.isArray(val) ? val : val ? [val] : [];
+
+        const nameArray = toArray(req.query.name);
+        const locationArray = toArray(req.query.location);
+        const positionArray = toArray(req.query.position);
+        const statusArray = toArray(req.query.status);
+        const hired = req.query.hired || '';
+        const ageMin = req.query.ageMin || '';
+        const ageMax = req.query.ageMax || '';
 
         const pool = await sql.connect(req.session.dbConfig);
+        const request = pool.request();
+
+        // dynamic WHERE conditions
+        const conditions = [];
+
+        if (nameArray.length) {
+            const placeholders = nameArray.map((_, i) => `@name${i}`).join(', ');
+            conditions.push(`c.name IN (${placeholders})`);
+            nameArray.forEach((val, i) => request.input(`name${i}`, sql.VarChar, val));
+        }
+
+        if (locationArray.length) {
+            const placeholders = locationArray.map((_, i) => `@loc${i}`).join(', ');
+            conditions.push(`c.location IN (${placeholders})`);
+            locationArray.forEach((val, i) => request.input(`loc${i}`, sql.VarChar, val));
+        }
+
+        if (positionArray.length) {
+            const placeholders = positionArray.map((_, i) => `@pos${i}`).join(', ');
+            conditions.push(`ISNULL(p.position_name, '') IN (${placeholders})`);
+            positionArray.forEach((val, i) => request.input(`pos${i}`, sql.VarChar, val));
+        }
+
+        if (statusArray.length) {
+            const placeholders = statusArray.map((_, i) => `@status${i}`).join(', ');
+            conditions.push(`ISNULL(s.selection_status, '') IN (${placeholders})`);
+            statusArray.forEach((val, i) => request.input(`status${i}`, sql.VarChar, val));
+        }
+
+        if (ageMin) {
+            conditions.push(`c.age >= @ageMin`);
+            request.input('ageMin', sql.Int, parseInt(ageMin));
+        }
+
+        if (ageMax) {
+            conditions.push(`c.age <= @ageMax`);
+            request.input('ageMax', sql.Int, parseInt(ageMax));
+        }
+
+        if (hired === 'true') {
+            conditions.push(`s.job_offer = 1`);
+        }
+
+        const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
 
         const query = `
             SELECT 
@@ -844,6 +891,7 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
                 c.name,
                 c.surname,
                 c.contact_date,
+                c.age,
                 s.interview_date,
                 s.selection_status,
                 s.job_offer,
@@ -851,39 +899,40 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
             FROM candidate_card c
             LEFT JOIN selection_card s ON c.u_id = s.u_id
             LEFT JOIN s_positions p ON s.pos_id = p.pos_id
-            WHERE
-                c.name LIKE @name AND
-                c.location LIKE @location AND
-                ISNULL(p.position_name, '') LIKE @position AND
-                ISNULL(s.selection_status, '') LIKE @status AND
-                (
-                    @hired = '' OR 
-                    (@hired = 'true' AND s.job_offer = 1)
-                )
+            ${whereClause}
             ORDER BY c.u_id DESC
         `;
 
-        const result = await pool.request()
-            .input('name', sql.VarChar, `%${name}%`)
-            .input('location', sql.VarChar, `%${location}%`)
-            .input('position', sql.VarChar, `%${position}%`)
-            .input('status', sql.VarChar, `%${status}%`)
-            .input('hired', sql.VarChar, hired)
-            .query(query);
+        const [
+            candidateData,
+            nameOptions,
+            locationOptions,
+            positionOptions,
+            statusOptions
+        ] = await Promise.all([
+            request.query(query),
+            pool.request().query(`SELECT DISTINCT name FROM candidate_card WHERE name IS NOT NULL`),
+            pool.request().query(`SELECT DISTINCT location FROM candidate_card WHERE location IS NOT NULL`),
+            pool.request().query(`SELECT DISTINCT position_name FROM s_positions WHERE position_name IS NOT NULL`),
+            pool.request().query(`SELECT DISTINCT selection_status FROM selection_card WHERE selection_status IS NOT NULL`)
+        ]);
 
         const groupedCandidates = {};
-
-        result.recordset.forEach(candidate => {
-            const pos = candidate.position_name || 'Unassigned';
-            if (!groupedCandidates[pos]) {
-                groupedCandidates[pos] = [];
-            }
-            groupedCandidates[pos].push(candidate);
+        candidateData.recordset.forEach(c => {
+            const key = c.position_name || 'Unassigned';
+            if (!groupedCandidates[key]) groupedCandidates[key] = [];
+            groupedCandidates[key].push(c);
         });
 
         res.render('candidates', {
             groupedCandidates,
             searchValue: req.query,
+            filterOptions: {
+                names: nameOptions.recordset.map(r => r.name),
+                locations: locationOptions.recordset.map(r => r.location),
+                positions: positionOptions.recordset.map(r => r.position_name),
+                statuses: statusOptions.recordset.map(r => r.selection_status)
+            },
             csrfToken: req.csrfToken()
         });
 

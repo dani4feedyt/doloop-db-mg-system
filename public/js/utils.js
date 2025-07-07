@@ -30,24 +30,36 @@ export function initViewToggle() {
 }
 
 export function initFilterPopup(onSubmitCallback) {
-  const modal = document.getElementById('filterModal');
-  const openBtn = document.getElementById('filterBtn');
-  const cancelBtn = document.getElementById('cancelFilter');
-  const form = document.getElementById('filterForm');
+    const modal = document.getElementById('filterModal');
+    const openBtn = document.getElementById('filterBtn');
+    const cancelBtn = document.getElementById('cancelFilter');
+    const clearBtn = document.getElementById('clearFilters');
+    const form = document.getElementById('filterForm');
 
-  openBtn.addEventListener('click', () => modal.classList.remove('hidden'));
-  cancelBtn.addEventListener('click', () => modal.classList.add('hidden'));
+    openBtn.addEventListener('click', () => modal.classList.remove('hidden'));
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(form);
-    const filters = {};
-    formData.forEach((value, key) => {
-      if (value) filters[key] = value;
+    clearBtn.addEventListener('click', () => {
+        const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = false);
     });
 
-    modal.classList.add('hidden');
-    if (onSubmitCallback) onSubmitCallback(filters);
-  });
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        const params = new URLSearchParams();
+
+        for (const [key, value] of formData.entries()) {
+        params.append(key, value);
+        }
+
+        modal.classList.add('hidden');
+        if (onSubmitCallback) onSubmitCallback(params.toString());
+    });
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            form.requestSubmit();
+        }
+    });
 }
