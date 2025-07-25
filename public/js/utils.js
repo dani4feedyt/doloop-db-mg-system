@@ -35,11 +35,20 @@ export function initFilterPopup(onSubmitCallback) {
     const clearBtn = document.getElementById('clearFilters');
     const form = document.getElementById('filterForm');
 
+    const autoSubmittedKey = 'candidateFiltersAutoSubmitted';
+    const clearedFlagKey = 'candidateFiltersCleared';
+
     openBtn.addEventListener('click', () => modal.classList.remove('hidden'));
 
     clearBtn.addEventListener('click', () => {
         const checkboxes = form.querySelectorAll('input[type="checkbox"]');
         checkboxes.forEach(cb => cb.checked = false);
+        localStorage.removeItem('candidateFilters');
+        sessionStorage.setItem(clearedFlagKey, 'true');
+
+        form.querySelectorAll('input[type="text"], input[type="number"]').forEach(el => {
+            el.value = '';
+        });
     });
 
     form.addEventListener('submit', (e) => {
@@ -49,10 +58,13 @@ export function initFilterPopup(onSubmitCallback) {
         const params = new URLSearchParams();
 
         for (const [key, value] of formData.entries()) {
-        params.append(key, value);
+            params.append(key, value);
         }
 
         modal.classList.add('hidden');
+
+        sessionStorage.removeItem(clearedFlagKey);
+
         if (onSubmitCallback) onSubmitCallback(params.toString());
     });
 
@@ -61,4 +73,11 @@ export function initFilterPopup(onSubmitCallback) {
             form.requestSubmit();
         }
     });
+
+    const wasCleared = sessionStorage.getItem(clearedFlagKey) === 'true';
+    const storedFilters = JSON.parse(localStorage.getItem('candidateFilters') || '{}');
+    if (Object.keys(storedFilters).length > 0 && !sessionStorage.getItem(autoSubmittedKey) && !wasCleared) {
+        sessionStorage.setItem(autoSubmittedKey, 'true');
+        form.requestSubmit();
+    }
 }

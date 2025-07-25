@@ -47,16 +47,6 @@
                 </label>
             </div>
 
-            <label>Name:</label>
-            <div class="scrollable-options small-scroll">
-                <% filterOptions.names.forEach(n => { 
-                    const displayValue = n === '' ? 'None' : n; 
-                %>
-                    <label><input type="checkbox" name="name" value="<%= n %>" 
-                    <%= (Array.isArray(searchValue.name) ? searchValue.name.includes(n) : searchValue.name === n) ? 'checked' : '' %>> <%= displayValue %>
-                    </label>
-                <% }) %>
-            </div>
 
             <label>Location:</label>
             <div class="scrollable-options small-scroll">

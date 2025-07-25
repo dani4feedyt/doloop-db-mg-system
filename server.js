@@ -831,7 +831,7 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
         // value normalisation
         const toArray = val => Array.isArray(val) ? val : val ? [val] : [];
 
-        const nameArray = toArray(req.query.name);
+        // const nameArray = toArray(req.query.name);
         const locationArray = toArray(req.query.location);
         const positionArray = toArray(req.query.position);
         const statusArray = toArray(req.query.status);
@@ -845,11 +845,11 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
         // dynamic WHERE conditions
         const conditions = [];
 
-        if (nameArray.length) {
-            const placeholders = nameArray.map((_, i) => `@name${i}`).join(', ');
-            conditions.push(`c.name IN (${placeholders})`);
-            nameArray.forEach((val, i) => request.input(`name${i}`, sql.VarChar, val));
-        }
+        // if (nameArray.length) {
+        //     const placeholders = nameArray.map((_, i) => `@name${i}`).join(', ');
+        //     conditions.push(`c.name IN (${placeholders})`);
+        //     nameArray.forEach((val, i) => request.input(`name${i}`, sql.VarChar, val));
+        // }
 
         if (locationArray.length) {
             const placeholders = locationArray.map((_, i) => `@loc${i}`).join(', ');
@@ -905,13 +905,13 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
 
         const [
             candidateData,
-            nameOptions,
+            // nameOptions,
             locationOptions,
             positionOptions,
             statusOptions
         ] = await Promise.all([
             request.query(query),
-            pool.request().query(`SELECT DISTINCT name FROM candidate_card WHERE name IS NOT NULL`),
+            // pool.request().query(`SELECT DISTINCT name FROM candidate_card WHERE name IS NOT NULL`),
             pool.request().query(`SELECT DISTINCT location FROM candidate_card WHERE location IS NOT NULL`),
             pool.request().query(`SELECT DISTINCT position_name FROM s_positions WHERE position_name IS NOT NULL`),
             pool.request().query(`SELECT DISTINCT selection_status FROM selection_card WHERE selection_status IS NOT NULL`)
@@ -931,7 +931,7 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
             recordCount,
             searchValue: req.query,
             filterOptions: {
-                names: nameOptions.recordset.map(r => r.name),
+                // names: nameOptions.recordset.map(r => r.name),
                 locations: locationOptions.recordset.map(r => r.location),
                 positions: positionOptions.recordset.map(r => r.position_name),
                 statuses: statusOptions.recordset.map(r => r.selection_status)
