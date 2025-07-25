@@ -115,7 +115,6 @@ export function attachCellEditors(csrfToken) {
             const value = select.value;
 
             if (value === '__other__') {
-                // Replace select with input for custom value
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.placeholder = 'Enter custom value';
@@ -374,7 +373,6 @@ export function attachCellEditors(csrfToken) {
 
                     const fileName = file.name;
 
-                    // If preview doesn't exist (e.g. first time adding a file), create it
                     if (!preview) {
                         preview = document.createElement('div');
                         preview.classList.add('file-preview');

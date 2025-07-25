@@ -136,7 +136,7 @@ function requireDbLogin(req, res, next) {
 app.get('/', requireDbLogin, async (req, res) => {
     try {
         await sql.connect(req.session.dbConfig);
-        const result = await sql.query('SELECT * FROM candidate_card'); // Modify as needed
+        const result = await sql.query('SELECT * FROM candidate_card');
         res.render('index', { data: result.recordset, csrfToken: req.csrfToken() });
     } catch (err) {
         console.error(err);
@@ -379,10 +379,9 @@ app.get('/bio/:id', requireDbLogin, async (req, res) => {
         if (candidate.cv) {
             hasCV = true;
 
-            // Dynamically detect file extension from buffer
             const fileTypeFromBuffer = await import('file-type').then(ft => ft.fileTypeFromBuffer);
             const type = await fileTypeFromBuffer(candidate.cv);
-            cvExtension = type?.ext || 'txt'; // fallback to txt
+            cvExtension = type?.ext || 'txt'; 
         }
 
         const experienceListResult = await sql.query(`
@@ -709,12 +708,10 @@ app.post('/job/:id/update-status-history', requireDbLogin, async (req, res) => {
     try {
         const pool = await sql.connect(req.session.dbConfig);
 
-        // Clear existing history
         await pool.request()
             .input('userId', sql.Int, userId)
             .query('DELETE FROM status_history WHERE u_id = @userId');
 
-        // Insert new history entries
         for (const entry of history) {
             if (!entry.status || !entry.changed_at) continue;
 
