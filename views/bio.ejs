@@ -28,31 +28,44 @@
         <tr><th>Email</th><td contenteditable="true" data-field="e-mail" data-type="email"><%= candidate['e-mail'] %></td></tr>
         <tr><th>Phone</th><td contenteditable="true" data-field="phone_number" data-type="tel"><%= candidate.phone_number %></td></tr>
         <tr><th>Location</th><td contenteditable="true" data-field="location" data-type="text"><%= candidate.location %></td></tr>
-        <tr><th>Age</th><td contenteditable="true" data-field="age" data-type="number"><%= candidate.age %></td></tr>
+        <tr><th>Age</th><td contenteditable="true" data-field="age" data-type="number"><%= isNew ? '' : candidate.age %></td></tr>
         <tr><th>Gender</th><td data-field="gender" data-type="list" data-options="Male,Female"><%= candidate.gender %></td></tr>
         <tr>
             <th>CV</th>
-            <td data-field="cv" data-type="file" data-cv-exists="<%= candidate.cv ? 'true' : 'false' %>">
-                <% if (candidate.cv) { %>
-                Uploaded, click to change or download
+            <td
+                data-field="cv"
+                data-type="file"
+                data-cv-exists="<%= hasCV ? 'true' : 'false' %>"
+                data-cv-extension="<%= cvExtension %>"
+            >
+                <% if (hasCV) { %>
+                <div class="file-preview">
+                    <span>📄</span>
+                    <span class="filename">cv.<%= cvExtension %></span>
+                </div>
                 <% } else { %>
-                Add CV
+                Click to add CV
                 <% } %>
             </td>
         </tr>
         <tr><th>LinkedIn</th><td contenteditable="true" data-field="linkedin" data-type="url"><%= candidate.linkedin %></td></tr>
-        <tr><th>Employment Status</th><td data-field="employment status" data-type="boolean"><%= candidate['employment status'] ? 'Currently employed' : 'Currently not employed' %></td></tr>
+        <tr><th>Employment Status</th><td data-field="employment status" data-type="boolean"><%= isNew ? '' : (candidate['employment status'] ? 'Currently employed' : 'Currently not employed') %></td></tr>
         <tr><th>Salary Expectations</th><td contenteditable="true" data-field="salary expectations" data-type="number"><%= candidate['salary expectations'] %></td></tr>
 
         <tr>
             <th>Licenses</th>
             <td data-field="licenses" data-type="list" class="custom">
                 <ul id="licenseList" class="no-bullets">
+                <% if (licenses.length == 0) { %>
+                    <a id="noLicensesLable"><em>No licenses found.</em></a>
+                <% }; %>
+
                 <% licenses.forEach((lic) => { %>
                     <li class="license-item"><%= lic.license_name %></li>
                 <% }); %>
+                
                 </ul>
-                <button type="button" id="add-license">Add License</button>
+                <button type="button" class="btn" id="add-license">Add License</button>
             </td>
         </tr>
 
@@ -71,11 +84,11 @@
                         <% }); %>
                     <% } %>
                 </ul>
-                <button type="button" id="add-occupation">Add occupation</button>
+                <button type="button" class="btn" id="add-occupation">Add occupation</button>
             </td>
         </tr>
 
-        <tr><th>Future Contact</th><td data-field="future_contact" data-type="boolean"><%= candidate.future_contact ? 'True' : 'False' %></td></tr>
+        <tr><th>Future Contact</th><td data-field="future_contact" data-type="boolean"><%= isNew ? '' : (candidate.future_contact ? 'True' : 'False') %></td></tr>
         <tr><th>Contact Date</th><td contenteditable="true" data-field="contact_date" data-type="date"><%= candidate.contact_date ? candidate.contact_date.toISOString().split('T')[0] : '' %></td></tr>
         <tr><th>Comments</th><td contenteditable="true" data-field="comments" data-type="text" class="wrap"><%= candidate.comments %></td></tr>
     </table>

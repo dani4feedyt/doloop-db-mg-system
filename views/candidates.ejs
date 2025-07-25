@@ -141,7 +141,11 @@
                     <td><%= user.surname %></td>
                     <td><%= user.interview_date ? user.interview_date.toISOString().split('T')[0] : '–' %></td>
                     <td><%= user.contact_date ? user.contact_date.toISOString().split('T')[0] : '–' %></td>
-                    <td><%= user.selection_status || '–' %></td>
+                    <td><%= user.selection_status || '–' %>
+                        <% if (user.job_offer) { %>
+                            <span class="hired-badge">Hired</span>
+                        <% } %>
+                        </td>
                     <td>
                     <a href="/bio/<%= user.u_id %>">Biography</a> |
                     <a href="/job/<%= user.u_id %>">Job Card</a>

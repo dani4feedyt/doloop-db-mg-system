@@ -24,16 +24,16 @@
     <table border="1" cellpadding="10" cellspacing="0" class="editable-table", id="jobTable" data-userid="<%= person.u_id %>">
         <tr><th>Name</th><td contenteditable="true" data-field="name" data-type="text"><%= person.name %></td></tr>
         <tr><th>Surname</th><td contenteditable="true" data-field="surname" data-type="text"><%= person.surname %></td></tr>
-        <tr><th>Age</th><td contenteditable="true" data-field="age" data-type="number"><%= person.age %></td></tr>
+        <tr><th>Age</th><td contenteditable="true" data-field="age" data-type="number"><%= isNew ? '' : person.age %></td></tr>
         <tr><th>Location</th><td contenteditable="true" data-field="location" data-type="text"><%= person.location %></td></tr>
 
-        <tr><th>Position</th><td data-field="position_name" data-type="list" data-options-source="/api/positions"><%= jobs[0].position_name %></td></tr>   
+        <tr><th>Position</th><td data-field="position_name" data-type="list" data-options-source="/api/positions"><%= isNew ? '' : jobs[0].position_name %></td></tr>   
         <tr>
             <th>Selection Status</th>
             <td data-field="selection_status"
                 data-type="list"
                 data-options="Call,Interview,Awaiting decision,Undergoing medical check,Planned contract signing,Accepted,Rejected,Fired,Offer terminated">
-                <%= jobs[0].selection_status %>
+                <%= isNew ? '' : jobs[0].selection_status %>
             </td>
         </tr>
         <tr><th>Interview Date</th><td data-field="interview_date" data-type="date"><%= jobs[0].interview_date?.toISOString().split('T')[0] || '' %></td></tr>
@@ -47,8 +47,8 @@
                 <%= jobs[0].source %>
             </td>
         </tr>
-        <tr><th>Job Offer</th><td data-field="job_offer" data-type="boolean"><%= jobs[0].job_offer ? 'True' : 'False' %></td></tr>
-        <tr><th>Candidate Decision</th><td  data-field="candidate_decision" data-type="boolean"><%= jobs[0].candidate_decision ? 'Accepted' : 'Declined' %></td></tr>
+        <tr><th>Job Offer</th><td data-field="job_offer" data-type="boolean"><%= isNew ? '' : (jobs[0].job_offer ? 'True' : 'False') %></td></tr>
+        <tr><th>Candidate Decision</th><td  data-field="candidate_decision" data-type="boolean"><%= isNew ? '' : (jobs[0].candidate_decision ? 'Accepted' : 'Declined') %></td></tr>
         <tr><th>Refusal Reason</th><td contenteditable="true" data-field="refusal_reason" data-type="text" class="wrap"><%= jobs[0].refusal_reason %></td></tr>
         <tr><th>Work Start Date</th><td data-field="work_start_date" data-type="date"><%= jobs[0].work_start_date?.toISOString().split('T')[0] || '' %></td></tr>
         <tr><th>Comments</th><td contenteditable="true" data-field="comments" data-type="text" class="wrap"><%= jobs[0].comments %></td></tr>

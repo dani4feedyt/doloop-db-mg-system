@@ -317,6 +317,12 @@ input:checked + .slider:before {
     text-align: left;
 }
 
+.file-preview {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 
 .modal {
   position: fixed;

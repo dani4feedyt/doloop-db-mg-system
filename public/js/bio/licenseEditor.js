@@ -57,6 +57,8 @@ export function initLicenseEditor(csrfToken, userId) {
         });
 
         addBtn.addEventListener('click', () => {
+            const nLL = cell.querySelector('#noLicensesLable');
+            if (nLL) nLL.remove();
             const li = document.createElement('li');
             li.className = 'license-item';
             li.innerHTML = `<input type="text" class="license-input" />`;

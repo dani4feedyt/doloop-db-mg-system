@@ -51,7 +51,13 @@ export function initNavigation() {
     toggleViewBtn?.addEventListener("click", () => {
         const [currentIndex, category] = getCurrentIndexAndCategory();
         const newCategory = category === 'bio' ? 'job' : 'bio';
-        window.location.href = `/${newCategory}/${currentIndex}`;
+
+        const searchParams = new URLSearchParams(window.location.search);
+        const isNew = searchParams.has('new');
+
+        const queryString = (category === 'bio' && isNew) ? '?new=1' : '';
+
+        window.location.href = `/${newCategory}/${currentIndex}${queryString}`;
     });
 
     deleteBtn?.addEventListener("click", () => {

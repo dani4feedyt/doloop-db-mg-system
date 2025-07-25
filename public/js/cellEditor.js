@@ -264,35 +264,84 @@ export function attachCellEditors(csrfToken) {
             });
 
        } else if (type === 'file') {
+            cell.setAttribute('tabindex', '0');
+
             cell.addEventListener('click', () => {
                 if (cell.querySelector('input[type="file"]')) return;
+
+                cell.focus();
+
+                if (cell.dataset.cvExists !== 'true') {
+                    cell.dataset.cvExtension = '';
+                }
 
                 const hasCV = cell.dataset.cvExists === 'true';
                 const originalHTML = cell.innerHTML;
                 cell.innerHTML = '';
 
+                const wrapper = document.createElement('div');
+                wrapper.style.display = 'flex';
+                wrapper.style.alignItems = 'center';
+                wrapper.style.gap = '12px';
+
+                let preview = null;
+                let filenameSpan = null;
+
+                if (hasCV) {
+                    preview = document.createElement('div');
+                    preview.classList.add('file-preview');
+                    preview.style.display = 'flex';
+                    preview.style.alignItems = 'center';
+                    preview.style.gap = '4px';
+
+                    const icon = document.createElement('span');
+                    icon.textContent = '📄';
+
+                    filenameSpan = document.createElement('span');
+                    filenameSpan.classList.add('filename');
+
+                    const extension = cell.dataset.cvExtension || 'txt';
+                    filenameSpan.textContent = 'cv.' + extension;
+
+                    preview.appendChild(icon);
+                    preview.appendChild(filenameSpan);
+                }
+
                 const input = document.createElement('input');
                 input.type = 'file';
-                input.accept = '.pdf,.doc,.docx,.png,.jpg,.jpeg,.txt'; 
+                input.accept = '.pdf,.doc,.docx,.png,.jpg,.jpeg,.txt';
+                input.style.display = 'none';
+
+                const inputId = 'cv-upload-' + Math.random().toString(36).substring(2, 8);
+                input.id = inputId;
+
+                const label = document.createElement('label');
+                label.htmlFor = inputId;
+                label.textContent = 'Choose File';
+                label.classList.add('btn');
 
                 const uploadButton = document.createElement('button');
                 uploadButton.textContent = 'Upload';
-                uploadButton.style.marginLeft = '8px';
+                uploadButton.classList.add('btn');
 
-                cell.appendChild(input);
-                cell.appendChild(uploadButton);
+                wrapper.appendChild(input);
+                wrapper.appendChild(label);
+                if (preview) wrapper.appendChild(preview);
+                wrapper.appendChild(uploadButton);
 
                 if (hasCV) {
                     const downloadBtn = document.createElement('button');
                     downloadBtn.textContent = 'Download';
-                    downloadBtn.style.marginLeft = '8px';
+                    downloadBtn.classList.add('btn');
+
                     downloadBtn.addEventListener('click', () => {
                         window.open(`/${resource}/${userId}/download-cv`, '_blank');
                     });
 
                     const deleteBtn = document.createElement('button');
                     deleteBtn.textContent = 'Delete';
-                    deleteBtn.style.marginLeft = '8px';
+                    deleteBtn.classList.add('btn');
+
                     deleteBtn.addEventListener('click', async () => {
                         if (!confirm('Are you sure you want to delete the CV?')) return;
 
@@ -305,21 +354,56 @@ export function attachCellEditors(csrfToken) {
                             if (!res.ok) throw new Error(await res.text());
 
                             alert('CV deleted.');
+                            wrapper.dataset.cvExists = 'false';
                             cell.dataset.cvExists = 'false';
-                            cell.innerHTML = 'Add CV';
+                            cell.dataset.cvExtension = '';
+                            closeFileEditor();
                         } catch (err) {
                             alert('Failed to delete CV: ' + err.message);
                             cell.innerHTML = originalHTML;
                         }
                     });
 
-                    cell.appendChild(downloadBtn);
-                    cell.appendChild(deleteBtn);
+                    wrapper.appendChild(downloadBtn);
+                    wrapper.appendChild(deleteBtn);
                 }
+
+                input.addEventListener('change', () => {
+                    const file = input.files[0];
+                    if (!file) return;
+
+                    const fileName = file.name;
+
+                    // If preview doesn't exist (e.g. first time adding a file), create it
+                    if (!preview) {
+                        preview = document.createElement('div');
+                        preview.classList.add('file-preview');
+                        preview.style.display = 'flex';
+                        preview.style.alignItems = 'center';
+                        preview.style.gap = '4px';
+
+                        const icon = document.createElement('span');
+                        icon.textContent = '📄';
+
+                        filenameSpan = document.createElement('span');
+                        filenameSpan.classList.add('filename');
+
+                        preview.appendChild(icon);
+                        preview.appendChild(filenameSpan);
+                        wrapper.insertBefore(preview, uploadButton);
+                    }
+
+                    preview.style.display = 'inline-flex';
+                    filenameSpan.textContent = fileName;
+                });
 
                 uploadButton.addEventListener('click', async () => {
                     const file = input.files[0];
-                    if (!file) return alert('No file selected.');
+                    if (!file) {
+                        alert('No file selected.');
+                        closeFileEditor();
+                        return;
+                    }
 
                     const formData = new FormData();
                     formData.append('cv', file);
@@ -334,14 +418,64 @@ export function attachCellEditors(csrfToken) {
                         if (!res.ok) throw new Error(await res.text());
 
                         alert('File uploaded.');
+                        wrapper.dataset.cvExists = 'true';
                         cell.dataset.cvExists = 'true';
-                        cell.innerHTML = 'Uploaded, click to change or download';
+
+                        const newExtension = file.name.split('.').pop() || 'txt';
+                        cell.dataset.cvExtension = newExtension;
+
+                        closeFileEditor();
+
+                        const postUploadPreview = document.createElement('div');
+                        postUploadPreview.classList.add('file-preview');
+                        postUploadPreview.style.display = 'inline-flex';
+                        postUploadPreview.style.alignItems = 'center';
+                        postUploadPreview.style.gap = '6px';
+
+                        const icon = document.createElement('span');
+                        icon.textContent = '📄';
+
+                        const filename = document.createElement('span');
+                        filename.classList.add('filename');
+                        filename.textContent = file.name;
+
+                        postUploadPreview.appendChild(icon);
+                        postUploadPreview.appendChild(filename);
+
+                        cell.innerHTML = '';
+                        cell.appendChild(postUploadPreview);
                     } catch (err) {
                         alert('Upload failed: ' + err.message);
                         cell.innerHTML = originalHTML;
+                        closeFileEditor();
                     }
                 });
+
+                cell.appendChild(wrapper);
             });
+
+            function closeFileEditor() {
+                if (cell.dataset.cvExists === 'true' && cell.dataset.cvExtension) {
+                    const ext = cell.dataset.cvExtension;
+                    cell.innerHTML = `
+                        <div class="file-preview">
+                            <span>📄</span>
+                            <span class="filename">cv.${ext}</span>
+                        </div>
+                    `;
+                } else {
+                    cell.innerHTML = 'Click to add CV';
+                }
+            }
+
+            cell.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (!cell.contains(document.activeElement)) {
+                        closeFileEditor();
+                    }
+                }, 100);
+            });
+
 
 
         } else {

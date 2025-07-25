@@ -349,7 +349,7 @@ app.get('/bio/new', requireDbLogin, async (req, res) => {
                 VALUES (@u_id, @pos_id, @selection_status, @is_replacement)
             `);
 
-        res.redirect(`/bio/${newId}`);
+        res.redirect(`/bio/${newId}?new=1`);
 
     } catch (err) {
         console.error('Error creating new candidate:', err);
@@ -373,6 +373,18 @@ app.get('/bio/:id', requireDbLogin, async (req, res) => {
 
         const candidate = candidateResult.recordset[0];
 
+        let cvExtension = '';
+        let hasCV = false;
+
+        if (candidate.cv) {
+            hasCV = true;
+
+            // Dynamically detect file extension from buffer
+            const fileTypeFromBuffer = await import('file-type').then(ft => ft.fileTypeFromBuffer);
+            const type = await fileTypeFromBuffer(candidate.cv);
+            cvExtension = type?.ext || 'txt'; // fallback to txt
+        }
+
         const experienceListResult = await sql.query(`
             SELECT job_name FROM c_exp_list WHERE u_id = ${userId}
         `);
@@ -381,11 +393,16 @@ app.get('/bio/:id', requireDbLogin, async (req, res) => {
 
         const licensesResult = await sql.query(`SELECT license_name FROM c_licenses WHERE u_id = ${userId}`);
 
+        const isNew = req.query.new === '1';
+
         res.render('bio', {
             candidate,
             experience: experienceList,
             licenses: licensesResult.recordset,
-            csrfToken: req.csrfToken()
+            csrfToken: req.csrfToken(),
+            isNew,
+            cvExtension,
+            hasCV
         });
 
     } catch (err) {
@@ -556,7 +573,8 @@ app.get('/job/:id', requireDbLogin, async (req, res) => {
             person: personInfo,
             jobs,
             statusHistory: historyResult.recordset,
-            csrfToken: req.csrfToken()
+            csrfToken: req.csrfToken(),
+            isNew: req.query.new === '1'
         });
 
     } catch (err) {
