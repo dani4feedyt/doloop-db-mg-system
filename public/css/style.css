@@ -231,14 +231,13 @@ nav .navigation-buttons form {
   margin: 6px 0;
 }
 
-.interactive-card .links a {
+.links a {
   text-decoration: none;
   color: #000000;
   font-weight: 600;
-  margin-right: 10px;
 }
 
-.interactive-card .links a:hover {
+.links a:hover {
   text-decoration: underline;
 }
 

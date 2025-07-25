@@ -22,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const storedFilters = JSON.parse(localStorage.getItem('candidateFilters') || '{}');
     const form = document.getElementById('filterForm');
 
-    // Restore stored filters
     for (const key in storedFilters) {
         const values = [].concat(storedFilters[key]);
         values.forEach(val => {
@@ -42,6 +41,35 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("home")?.addEventListener("click", () => {
         sessionStorage.removeItem('candidateFiltersAutoSubmitted');
         window.location.href = '/';
+    });
+
+    document.querySelectorAll('.delete-link').forEach(link => {
+        link.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        const userId = link.dataset.id;
+        if (!userId) return;
+
+        if (!confirm('Are you sure you want to delete this candidate?')) return;
+
+        try {
+            const res = await fetch(`/bio/${userId}/delete`, {
+            method: 'POST',
+            headers: {
+                'CSRF-Token': csrfToken
+            }
+            });
+
+            if (!res.ok) throw new Error(await res.text());
+
+            alert('Candidate deleted.');
+            const container = link.closest('.candidate-card, .candidate-row');
+            if (container) container.remove();
+            window.location.href = '/candidates';
+        } catch (err) {
+            alert('Failed to delete candidate: ' + err.message);
+        }
+    });
     });
 
     window.addEventListener('beforeunload', () => {

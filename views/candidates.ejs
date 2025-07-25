@@ -4,11 +4,11 @@
     <link rel="stylesheet" href="/css/style.css">
     <meta name="csrf-token" content="<%= csrfToken %>">
     <script type="module" src="/js/cand/candidates.js" defer></script>
-    <title>All Candidates</title>
+    <title>Candidates List</title>
 </head>
 <body>
     <nav class="editable-table-nav">
-        <h1>All Candidates
+        <h1>Candidates List
         <div class="navigation-buttons">
             <a href="/" class="btn-nav">↑</a>
             <button id="home" class="btn-nav">⌂</button>
@@ -87,7 +87,7 @@
             </label>
 
             <div class="modal-actions">
-                <button class="btn" type="button" id="clearFilters">Uncheck All</button>
+                <button class="btn" type="button" id="clearFilters">Clear All</button>
             </div>
             </form>
         </div>
@@ -111,7 +111,8 @@
                             <p>Status: <%= user.selection_status || 'Not specified' %></p>
                             <div class="links">
                                 <a href="/bio/<%= user.u_id %>">Biography</a> |
-                                <a href="/job/<%= user.u_id %>">Job Card</a>
+                                <a href="/job/<%= user.u_id %>">Job Card</a> |
+                                <a href="#" class="delete-link" data-id="<%= user.u_id %>">Delete</a>
                             </div>
                         </div>
                     <% }); %>
@@ -147,8 +148,11 @@
                         <% } %>
                         </td>
                     <td>
-                    <a href="/bio/<%= user.u_id %>">Biography</a> |
-                    <a href="/job/<%= user.u_id %>">Job Card</a>
+                        <div class="links">
+                            <a href="/bio/<%= user.u_id %>">Biography</a> |
+                            <a href="/job/<%= user.u_id %>">Job Card</a> |
+                            <a href="#" class="delete-link" data-id="<%= user.u_id %>">Delete</a>
+                        </div>
                     </td>
                 </tr>
                 <% }); %>
