@@ -191,6 +191,20 @@ nav .navigation-buttons form {
   flex-direction: column;
 }
 
+.filter-row {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+}
+.filter-row label {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-row input{
+  max-width: 40px;
+}
+
 
 .login-form label {
   margin-bottom: 8px;

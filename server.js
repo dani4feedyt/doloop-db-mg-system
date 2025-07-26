@@ -846,10 +846,11 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
         // value normalisation
         const toArray = val => Array.isArray(val) ? val : val ? [val] : [];
 
-        // const nameArray = toArray(req.query.name);
+        const jobCount = req.query.jobCount || '';
         const locationArray = toArray(req.query.location);
         const positionArray = toArray(req.query.position);
         const statusArray = toArray(req.query.status);
+        const genderArray = toArray(req.query.gender);
         const hired = req.query.hired || '';
         const ageMin = req.query.ageMin || '';
         const ageMax = req.query.ageMax || '';
@@ -860,11 +861,16 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
         // dynamic WHERE conditions
         const conditions = [];
 
-        // if (nameArray.length) {
-        //     const placeholders = nameArray.map((_, i) => `@name${i}`).join(', ');
-        //     conditions.push(`c.name IN (${placeholders})`);
-        //     nameArray.forEach((val, i) => request.input(`name${i}`, sql.VarChar, val));
-        // }
+        
+
+        if (jobCount !== '') {
+            conditions.push(`(
+                SELECT COUNT(*) 
+                FROM c_exp_list exp 
+                WHERE exp.u_id = c.u_id
+            ) = @jobCount`);
+            request.input('jobCount', sql.Int, parseInt(jobCount));
+        }
 
         if (locationArray.length) {
             const placeholders = locationArray.map((_, i) => `@loc${i}`).join(', ');
@@ -882,6 +888,12 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
             const placeholders = statusArray.map((_, i) => `@status${i}`).join(', ');
             conditions.push(`ISNULL(s.selection_status, '') IN (${placeholders})`);
             statusArray.forEach((val, i) => request.input(`status${i}`, sql.VarChar, val));
+        }
+
+        if (genderArray.length) {
+            const placeholders = genderArray.map((_, i) => `@gender${i}`).join(', ');
+            conditions.push(`c.gender IN (${placeholders})`);
+            genderArray.forEach((val, i) => request.input(`gender${i}`, sql.VarChar, val));
         }
 
         if (ageMin) {
@@ -907,10 +919,16 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
                 c.surname,
                 c.contact_date,
                 c.age,
+                c.gender,
                 s.interview_date,
                 s.selection_status,
                 s.job_offer,
-                p.position_name
+                p.position_name,
+                (
+                    SELECT COUNT(*) 
+                    FROM c_exp_list exp 
+                    WHERE exp.u_id = c.u_id
+                ) AS job_count
             FROM candidate_card c
             LEFT JOIN selection_card s ON c.u_id = s.u_id
             LEFT JOIN s_positions p ON s.pos_id = p.pos_id
@@ -920,13 +938,13 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
 
         const [
             candidateData,
-            // nameOptions,
+            genderOptions,
             locationOptions,
             positionOptions,
             statusOptions
         ] = await Promise.all([
             request.query(query),
-            // pool.request().query(`SELECT DISTINCT name FROM candidate_card WHERE name IS NOT NULL`),
+            pool.request().query(`SELECT DISTINCT gender FROM candidate_card WHERE gender IS NOT NULL`),
             pool.request().query(`SELECT DISTINCT location FROM candidate_card WHERE location IS NOT NULL`),
             pool.request().query(`SELECT DISTINCT position_name FROM s_positions WHERE position_name IS NOT NULL`),
             pool.request().query(`SELECT DISTINCT selection_status FROM selection_card WHERE selection_status IS NOT NULL`)
@@ -946,7 +964,7 @@ app.get('/candidates', requireDbLogin, async (req, res) => {
             recordCount,
             searchValue: req.query,
             filterOptions: {
-                // names: nameOptions.recordset.map(r => r.name),
+                genders: genderOptions.recordset.map(r => r.gender),
                 locations: locationOptions.recordset.map(r => r.location),
                 positions: positionOptions.recordset.map(r => r.position_name),
                 statuses: statusOptions.recordset.map(r => r.selection_status)

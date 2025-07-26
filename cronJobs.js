@@ -44,7 +44,7 @@ function startCronJobs() {
         }
     });
 
-    cron.schedule('0 16 * * *', async () => {
+    cron.schedule('30 9 * * *', async () => {
         console.log('Running daily candidate contact_date reminder job...');
     
         const today = new Date().toISOString().slice(0, 10);
@@ -69,9 +69,9 @@ function startCronJobs() {
     
                 const mailOptions = {
                     from: process.env.EMAIL_USER,
-                    to: "dan.arbatov@ukr.net", //candidate['e-mail']
+                    to: "dan.arbatov@ukr.net", //candidate['e-mail'] (or insert HR's e-mail)
                     subject: 'Reminder: Contact Scheduled for Today',
-                    text: `Dear ${candidate.name} ${candidate.surname},\n\nThis is a friendly reminder that we scheduled to contact you today.\n\nBest regards,\nHR Team`
+                    text: `Dear ${candidate.name} ${candidate.surname},\n\nThis is a friendly reminder that we scheduled to contact you today.\n\nBest regards,\nDoloop HR Team`
                 };
     
                 await transporter.sendMail(mailOptions);
@@ -83,7 +83,7 @@ function startCronJobs() {
         }
     });
     
-    cron.schedule('5 16 * * *', async () => {
+    cron.schedule('30 9 * * *', async () => {
         console.log('Running daily selection process reminder job...');
     
         const today = new Date().toISOString().slice(0, 10);

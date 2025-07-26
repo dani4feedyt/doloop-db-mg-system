@@ -38,12 +38,31 @@
             <h2>Apply Filters</h2>
             <form id="filterForm" method="GET" action="/candidates">
 
-            <div class="form-row">
-                <label>Age from:
+            <div class="filter-row">
+            <label>
+                Age from:
                 <input type="number" name="ageMin" min="0" value="<%= searchValue.ageMin || '' %>" />
-                </label>
-                <label>Age to:
+            </label>
+            <label>
+                to:
                 <input type="number" name="ageMax" min="0" value="<%= searchValue.ageMax || '' %>" />
+            </label>
+            </div>
+
+            <label>Gender:</label>
+            <div class="scrollable-options small-scroll">
+                <% ['Male', 'Female', 'Other'].forEach(g => { %>
+                    <label>
+                        <input type="checkbox" name="gender" value="<%= g %>"
+                            <%= (Array.isArray(searchValue.gender) ? searchValue.gender.includes(g) : searchValue.gender === g) ? 'checked' : '' %>>
+                        <%= g %>
+                    </label>
+                <% }) %>
+            </div>
+
+            <div class="filter-row">
+                <label>Number of Previous Jobs:
+                    <input type="number" name="jobCount" min="0" value="<%= searchValue.jobCount || '' %>" />
                 </label>
             </div>
 
@@ -70,7 +89,7 @@
                 <% }) %>
             </div>
 
-            <label>Status:</label>
+            <label>Current status:</label>
             <div class="scrollable-options small-scroll">
                 <% filterOptions.statuses.forEach(s => { 
                     const displayValue = s === '' ? 'None' : s; 
